@@ -5,29 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🐢 海龟汤创作工坊</title>
 <!-- Supabase 异步加载，不阻塞页面渲染 -->
-<script>
-(function() {
-  // 方案1: unpkg UMD (非模块)
-  var scripts = [
-    'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js',
-    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'
-  ];
-  
-  function tryLoad(idx) {
-    if (idx >= scripts.length) {
-      console.warn('Supabase CDN 全部加载失败');
-      return;
-    }
-    var s = document.createElement('script');
-    s.src = scripts[idx];
-    s.onload = function() { window._supabaseLoaded = true; };
-    s.onerror = function() { tryLoad(idx + 1); };
-    document.head.appendChild(s);
-  }
-  
-  tryLoad(0);
-})();
-</script>
+<!-- Supabase CDN（国内镜像 jsdmirror） -->
+<script src="https://cdn.jsdmirror.com/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root {
     --bg: #0f1117;
@@ -1587,44 +1566,17 @@ let isRegisterMode = false;
 
 // ===== 初始化 =====
 let supabase = null;
-let supabaseReady = false;
 
 async function initAuth() {
-  // 强制 5 秒后必定显示登录界面，防止卡死
+  // 强制 3 秒后显示登录界面（国内镜像备用保护）
   const forceShow = setTimeout(() => {
     const loading = document.getElementById('authLoading');
     const card = document.getElementById('authCard');
     if (loading) loading.style.display = 'none';
     if (card) card.style.display = 'block';
-    console.warn('Supabase 加载超时，强制显示登录界面');
-  }, 5000);
+  }, 3000);
 
-  // 等待 Supabase 加载完成（最多等 4.5 秒）
-  const waitForSupabase = () => {
-    return new Promise(resolve => {
-      if (typeof window.Supabase !== 'undefined') {
-        resolve();
-        return;
-      }
-      let waited = 0;
-      const interval = setInterval(() => {
-        waited += 100;
-        if (typeof window.Supabase !== 'undefined') {
-          clearInterval(interval);
-          resolve();
-        } else if (waited >= 4500) {
-          clearInterval(interval);
-          resolve();
-        }
-      }, 100);
-    });
-  };
-
-  await waitForSupabase();
-
-  // 检查 Supabase 是否加载成功
   if (typeof window.Supabase === 'undefined') {
-    console.warn('Supabase 未加载，显示登录界面');
     clearTimeout(forceShow);
     const loading = document.getElementById('authLoading');
     const card = document.getElementById('authCard');
@@ -1633,15 +1585,12 @@ async function initAuth() {
     return;
   }
 
-  // 创建 Supabase 客户端
   const SUPABASE_URL = 'https://askdqhqhvkklzmgcqtuy.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_afquHeJWh5_4emAtev4pDg_5cXWSDk1';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFza2RxaHFoaHZra2x6bWdjcXR1eSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzE1Mjc1MjAwLCJleHAiOjQ5MzA4NTEyMDB9.sb_publishable_afquHeJWh5_4emAtev4pDg_5cXWSDk1';
   try {
     const { createClient } = window.Supabase;
     supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    supabaseReady = true;
   } catch (e) {
-    console.warn('Supabase 客户端创建失败:', e.message);
     clearTimeout(forceShow);
     const loading = document.getElementById('authLoading');
     const card = document.getElementById('authCard');
