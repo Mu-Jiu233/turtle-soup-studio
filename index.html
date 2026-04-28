@@ -551,12 +551,6 @@
   .login-btn:hover { opacity: 0.9; }
   .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .login-error { color: var(--red); font-size: 12px; margin-top: 12px; min-height: 18px; }
-  .login-setup {
-    margin-top: 20px; padding-top: 16px;
-    border-top: 1px solid var(--border);
-    font-size: 11px; color: var(--text3);
-  }
-  .login-setup a { color: var(--accent2); cursor: pointer; text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -567,12 +561,9 @@
     <div class="login-logo">🐢</div>
     <div class="login-title">海龟汤创作工坊</div>
     <div class="login-sub" id="loginSub">请输入访问密码</div>
-    <input type="password" class="login-input" id="loginPassword" placeholder="输入密码后回车" onkeydown="if(event.key==='Enter')tryLogin()">
-    <button class="login-btn" id="loginBtn" onclick="tryLogin()">进入工坊</button>
+    <input type="password" class="login-input" id="loginPassword" placeholder="输入密码后回车" onkeydown="if(event.key==='Enter')handleLogin()">
+    <button class="login-btn" id="loginBtn" onclick="handleLogin()">进入工坊</button>
     <div class="login-error" id="loginError"></div>
-    <div class="login-setup" id="loginSetup">
-      首次使用？<a onclick="setupPassword()">设置密码</a>
-    </div>
   </div>
 </div>
 
@@ -1585,9 +1576,9 @@ function checkLogin() {
   const isLoggedIn = localStorage.getItem(LOGIN_KEY) === 'true';
 
   if (!hasPassword) {
-    // 首次使用，显示设置密码
+    // 首次使用
     document.getElementById('loginSub').textContent = '首次使用，请设置访问密码';
-    document.getElementById('loginSetup').style.display = 'none';
+    document.getElementById('loginBtn').textContent = '设置密码';
   } else if (isLoggedIn) {
     // 已登录，直接显示主内容
     showMainContent();
@@ -1600,37 +1591,40 @@ function showMainContent() {
   document.getElementById('mainContent').classList.add('show');
 }
 
-function setupPassword() {
+function handleLogin() {
   const pwd = document.getElementById('loginPassword').value;
-  if (!pwd || pwd.length < 4) {
-    document.getElementById('loginError').textContent = '密码至少4位';
-    return;
-  }
-  // 简单哈希存储
-  const hash = btoa(pwd + '_turtle_salt_2024');
-  localStorage.setItem(PASSWORD_KEY, hash);
-  localStorage.setItem(LOGIN_KEY, 'true');
-  showMainContent();
-  toast('success', '密码已设置，已自动登录');
-}
-
-function tryLogin() {
-  const pwd = document.getElementById('loginPassword').value;
-  const storedHash = localStorage.getItem(PASSWORD_KEY);
-  const inputHash = btoa(pwd + '_turtle_salt_2024');
+  const hasPassword = localStorage.getItem(PASSWORD_KEY);
 
   if (!pwd) {
     document.getElementById('loginError').textContent = '请输入密码';
     return;
   }
 
-  if (inputHash === storedHash) {
+  if (pwd.length < 4) {
+    document.getElementById('loginError').textContent = '密码至少4位';
+    return;
+  }
+
+  if (!hasPassword) {
+    // 首次使用：设置密码
+    const hash = btoa(pwd + '_turtle_salt_2024');
+    localStorage.setItem(PASSWORD_KEY, hash);
     localStorage.setItem(LOGIN_KEY, 'true');
     showMainContent();
-    toast('success', '登录成功');
+    toast('success', '密码已设置，已自动登录');
   } else {
-    document.getElementById('loginError').textContent = '密码错误';
-    document.getElementById('loginPassword').value = '';
+    // 已有密码：验证登录
+    const storedHash = localStorage.getItem(PASSWORD_KEY);
+    const inputHash = btoa(pwd + '_turtle_salt_2024');
+
+    if (inputHash === storedHash) {
+      localStorage.setItem(LOGIN_KEY, 'true');
+      showMainContent();
+      toast('success', '登录成功');
+    } else {
+      document.getElementById('loginError').textContent = '密码错误';
+      document.getElementById('loginPassword').value = '';
+    }
   }
 }
 
@@ -1640,6 +1634,9 @@ function logout() {
   document.getElementById('mainContent').classList.remove('show');
   document.getElementById('loginPassword').value = '';
   document.getElementById('loginError').textContent = '';
+  // 重置为设置密码模式
+  document.getElementById('loginSub').textContent = '首次使用，请设置访问密码';
+  document.getElementById('loginBtn').textContent = '设置密码';
 }
 
 // 页面加载时检查登录状态
