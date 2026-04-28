@@ -508,64 +508,9 @@
   .main-content { display: none; }
   .main-content.show { display: block; }
 
-  /* ===== 登录页面 ===== */
-  .login-overlay {
-    position: fixed; inset: 0; z-index: 9999;
-    background: var(--bg);
-    display: flex; align-items: center; justify-content: center;
-  }
-  .login-overlay.hide { display: none; }
-  .login-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 40px 36px;
-    width: 100%; max-width: 380px;
-    text-align: center;
-  }
-  .login-logo { font-size: 48px; margin-bottom: 16px; }
-  .login-title {
-    font-size: 22px; font-weight: 700;
-    background: linear-gradient(135deg, #a78bfa, #67e8f9);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    margin-bottom: 8px;
-  }
-  .login-sub { font-size: 13px; color: var(--text2); margin-bottom: 28px; }
-  .login-input {
-    width: 100%; padding: 12px 16px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text); font-size: 14px;
-    margin-bottom: 12px; outline: none;
-    transition: border-color 0.2s;
-  }
-  .login-input:focus { border-color: var(--accent); }
-  .login-btn {
-    width: 100%; padding: 12px;
-    background: linear-gradient(135deg, #7c6bff, #a78bfa);
-    border: none; border-radius: var(--radius-sm);
-    color: white; font-size: 15px; font-weight: 600;
-    cursor: pointer; transition: opacity 0.2s; margin-top: 8px;
-  }
-  .login-btn:hover { opacity: 0.9; }
-  .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .login-error { color: var(--red); font-size: 12px; margin-top: 12px; min-height: 18px; }
 </style>
 </head>
 <body>
-
-<!-- ===== 登录页面 ===== -->
-<div class="login-overlay" id="loginOverlay">
-  <div class="login-box">
-    <div class="login-logo">🐢</div>
-    <div class="login-title">海龟汤创作工坊</div>
-    <div class="login-sub" id="loginSub">请输入访问密码</div>
-    <input type="password" class="login-input" id="loginPassword" placeholder="输入密码后回车" onkeydown="if(event.key==='Enter')handleLogin()">
-    <button class="login-btn" id="loginBtn" onclick="handleLogin()">进入工坊</button>
-    <div class="login-error" id="loginError"></div>
-  </div>
-</div>
 
 <!-- ===== 主内容 ===== -->
 <div class="main" id="mainContent">
@@ -699,9 +644,6 @@
     <span id="statusText">未配置 API</span>
     <button class="btn btn-secondary btn-sm" onclick="openModal()" style="margin-left: 8px;">
       ⚙️ API 配置
-    </button>
-    <button class="btn btn-sm" onclick="logout()" style="margin-left: 8px; background: var(--surface3); color: var(--text2);">
-      🚪 退出
     </button>
   </div>
 </nav>
@@ -1593,81 +1535,6 @@ function toast(type, msg, duration = 3000) {
 document.getElementById('apiModal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
-
-// ===== 登录系统 =====
-const PASSWORD_KEY = 'turtleSoupPassword';
-const LOGIN_KEY = 'turtleSoupLoggedIn';
-
-function checkLogin() {
-  const hasPassword = localStorage.getItem(PASSWORD_KEY);
-  const isLoggedIn = localStorage.getItem(LOGIN_KEY) === 'true';
-
-  if (!hasPassword) {
-    // 首次使用
-    document.getElementById('loginSub').textContent = '首次使用，请设置访问密码';
-    document.getElementById('loginBtn').textContent = '设置密码';
-  } else if (isLoggedIn) {
-    // 已登录，直接显示主内容
-    showMainContent();
-  }
-  // 否则显示登录界面
-}
-
-function showMainContent() {
-  document.getElementById('loginOverlay').classList.add('hide');
-  document.getElementById('mainContent').classList.add('show');
-}
-
-function handleLogin() {
-  const pwd = document.getElementById('loginPassword').value;
-  const hasPassword = localStorage.getItem(PASSWORD_KEY);
-
-  if (!pwd) {
-    document.getElementById('loginError').textContent = '请输入密码';
-    return;
-  }
-
-  if (pwd.length < 4) {
-    document.getElementById('loginError').textContent = '密码至少4位';
-    return;
-  }
-
-  if (!hasPassword) {
-    // 首次使用：设置密码
-    const hash = btoa(pwd + '_turtle_salt_2024');
-    localStorage.setItem(PASSWORD_KEY, hash);
-    localStorage.setItem(LOGIN_KEY, 'true');
-    showMainContent();
-    toast('success', '密码已设置，已自动登录');
-  } else {
-    // 已有密码：验证登录
-    const storedHash = localStorage.getItem(PASSWORD_KEY);
-    const inputHash = btoa(pwd + '_turtle_salt_2024');
-
-    if (inputHash === storedHash) {
-      localStorage.setItem(LOGIN_KEY, 'true');
-      showMainContent();
-      toast('success', '登录成功');
-    } else {
-      document.getElementById('loginError').textContent = '密码错误';
-      document.getElementById('loginPassword').value = '';
-    }
-  }
-}
-
-function logout() {
-  localStorage.removeItem(LOGIN_KEY);
-  document.getElementById('loginOverlay').classList.remove('hide');
-  document.getElementById('mainContent').classList.remove('show');
-  document.getElementById('loginPassword').value = '';
-  document.getElementById('loginError').textContent = '';
-  // 重置为设置密码模式
-  document.getElementById('loginSub').textContent = '首次使用，请设置访问密码';
-  document.getElementById('loginBtn').textContent = '设置密码';
-}
-
-// 页面加载时检查登录状态
-checkLogin();
 </script>
 
 </script>
