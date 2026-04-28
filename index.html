@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐢 海龟汤创作工坊</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222636;
+    --surface3: #2a2f45;
+    --border: #2e3450;
+    --accent: #7c6bff;
+    --accent2: #a78bfa;
+    --accent-glow: rgba(124, 107, 255, 0.25);
+    --text: #e4e6f1;
+    --text2: #9ba3c7;
+    --text3: #6b7494;
+    --green: #34d399;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --orange: #fb923c;
+    --cyan: #22d3ee;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== 背景装饰 ===== */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(124,107,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== 顶部导航 ===== */
+  .navbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15, 17, 23, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .navbar-brand {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 18px; font-weight: 700;
+    background: linear-gradient(135deg, #a78bfa, #67e8f9);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .navbar-brand span { font-size: 24px; }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab {
+    padding: 6px 16px; border-radius: var(--radius-sm);
+    font-size: 14px; cursor: pointer;
+    color: var(--text2); transition: all 0.2s;
+    border: none; background: none;
+  }
+  .nav-tab:hover { color: var(--text); background: var(--surface2); }
+  .nav-tab.active { color: var(--accent2); background: rgba(124,107,255,0.15); }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text3); transition: background 0.3s;
+  }
+  .status-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-area { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
+
+  /* ===== 主布局 ===== */
+  .main { max-width: 1400px; margin: 0 auto; padding: 24px; position: relative; z-index: 1; }
+  .layout { display: grid; grid-template-columns: 360px 1fr; gap: 20px; }
+
+  /* ===== 面板通用 ===== */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 600; color: var(--text2);
+    background: var(--surface2);
+  }
+  .panel-header .icon { font-size: 16px; }
+  .panel-body { padding: 18px; }
+
+  /* ===== 表单元素 ===== */
+  label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+
+  input[type="text"], input[type="password"], input[type="url"], select, textarea {
+    width: 100%; padding: 9px 12px;
+    background: var(--surface3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-size: 14px; transition: border-color 0.2s;
+    font-family: inherit; outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  select option { background: var(--surface2); }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+
+  /* 密码显隐 */
+  .input-wrap { position: relative; }
+  .input-wrap input { padding-right: 40px; }
+  .toggle-eye {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    cursor: pointer; color: var(--text3); font-size: 16px;
+    background: none; border: none; padding: 2px;
+  }
+
+  /* ===== 按钮 ===== */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: all 0.2s; border: none; font-family: inherit;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #6d57f5, #a855f7);
+    color: white; box-shadow: 0 4px 15px rgba(109,87,245,0.4);
+  }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(109,87,245,0.5); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-secondary {
+    background: var(--surface3); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--surface2); border-color: var(--accent); }
+  .btn-ghost { background: none; color: var(--text2); border: 1px solid transparent; }
+  .btn-ghost:hover { color: var(--text); background: var(--surface2); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-danger { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+  .btn-danger:hover { background: rgba(248,113,113,0.2); }
+  .btn-success { background: rgba(52,211,153,0.1); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+  .btn-success:hover { background: rgba(52,211,153,0.2); }
+
+  /* ===== 难度选择器 ===== */
+  .level-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .level-card {
+    padding: 10px 8px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); cursor: pointer;
+    text-align: center; transition: all 0.2s;
+    background: var(--surface3);
+  }
+  .level-card:hover { border-color: var(--accent); background: rgba(124,107,255,0.08); }
+  .level-card.selected { border-color: var(--accent); background: rgba(124,107,255,0.15); }
+  .level-card .lv { font-size: 11px; color: var(--text3); margin-bottom: 2px; }
+  .level-card .name { font-size: 13px; font-weight: 600; }
+  .level-card .desc { font-size: 10px; color: var(--text3); margin-top: 3px; }
+  .lv1 .name { color: var(--green); }
+  .lv2 .name { color: var(--cyan); }
+  .lv3 .name { color: var(--accent2); }
+  .lv4 .name { color: var(--orange); }
+  .lv5 .name { color: var(--red); }
+
+  /* ===== 主题/风格选择 ===== */
+  .tag-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 12px; cursor: pointer;
+    border: 1px solid var(--border); color: var(--text2);
+    background: var(--surface3); transition: all 0.2s;
+  }
+  .tag:hover { border-color: var(--accent2); color: var(--text); }
+  .tag.selected { border-color: var(--accent2); color: var(--accent2); background: rgba(167,139,250,0.1); }
+
+  /* ===== 陷阱等级多选 ===== */
+  .trap-list { display: flex; flex-direction: column; gap: 6px; }
+  .trap-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); cursor: pointer;
+    background: var(--surface3); transition: all 0.2s;
+  }
+  .trap-item:hover { border-color: var(--accent); }
+  .trap-item.selected { border-color: var(--accent); background: rgba(124,107,255,0.1); }
+  .trap-item input[type="checkbox"] { display: none; }
+  .trap-check {
+    width: 16px; height: 16px; border-radius: 4px;
+    border: 1.5px solid var(--border); background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; flex-shrink: 0; transition: all 0.2s;
+  }
+  .trap-item.selected .trap-check { background: var(--accent); border-color: var(--accent); }
+  .trap-item.selected .trap-check::after { content: '✓'; color: white; }
+  .trap-info { flex: 1; }
+  .trap-name { font-size: 13px; font-weight: 500; }
+  .trap-desc { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+  /* ===== 生成区域 ===== */
+  .gen-panel { display: flex; flex-direction: column; gap: 16px; }
+  .gen-btn-row { display: flex; gap: 10px; align-items: center; }
+  .gen-btn {
+    flex: 1; padding: 14px; font-size: 16px; font-weight: 700;
+    letter-spacing: 1px; border-radius: var(--radius);
+    background: linear-gradient(135deg, #6d57f5, #a855f7, #06b6d4);
+    background-size: 200% 200%; animation: gradientShift 3s ease infinite;
+    color: white; border: none; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(109,87,245,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .gen-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(109,87,245,0.5); }
+  .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; animation: none; background: var(--surface3); box-shadow: none; }
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* ===== 输出区域 ===== */
+  .output-area {
+    min-height: 400px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px; font-size: 15px; line-height: 1.8;
+    position: relative; overflow: hidden;
+  }
+  .output-placeholder {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 350px; color: var(--text3); gap: 12px;
+  }
+  .output-placeholder .big-icon { font-size: 64px; opacity: 0.3; }
+  .output-placeholder .hint { font-size: 14px; }
+
+  /* 流式输出 */
+  .stream-cursor::after {
+    content: '▋'; animation: blink 0.7s step-end infinite;
+    color: var(--accent2);
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* 内容格式化 */
+  .soup-output h2 {
+    font-size: 18px; font-weight: 700; margin: 20px 0 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .soup-output h2:first-child { margin-top: 0; }
+  .soup-output h2 .badge {
+    padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;
+  }
+  .badge-soup { background: rgba(124,107,255,0.2); color: var(--accent2); }
+  .badge-answer { background: rgba(52,211,153,0.2); color: var(--green); }
+  .badge-note { background: rgba(251,191,36,0.2); color: var(--yellow); }
+  .soup-output .soup-text {
+    background: var(--surface3); border-left: 3px solid var(--accent);
+    padding: 14px 16px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 15px; line-height: 1.9; color: var(--text);
+  }
+  .soup-output .answer-text {
+    background: rgba(52,211,153,0.05); border-left: 3px solid var(--green);
+    padding: 14px 16px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 14px; line-height: 1.8; color: #c8f5e9;
+  }
+  .soup-output .note-text {
+    background: rgba(251,191,36,0.05); border-left: 3px solid var(--yellow);
+    padding: 12px 16px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 13px; line-height: 1.8; color: #fef3c7;
+  }
+
+  /* ===== 进度/流式状态栏 ===== */
+  .progress-bar {
+    height: 3px; background: linear-gradient(90deg, var(--accent), var(--cyan), var(--accent2));
+    border-radius: 2px; background-size: 200% 100%;
+    animation: progressAnim 1.5s linear infinite;
+  }
+  @keyframes progressAnim { 0% { background-position: 0% 0; } 100% { background-position: 200% 0; } }
+  .status-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px; background: var(--surface3);
+    border-radius: var(--radius-sm); font-size: 12px; color: var(--text3);
+  }
+  .status-bar.generating { color: var(--accent2); }
+
+  /* ===== 历史记录 ===== */
+  .history-list { display: flex; flex-direction: column; gap: 8px; }
+  .history-item {
+    padding: 12px 14px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .history-item:hover { border-color: var(--accent); background: rgba(124,107,255,0.05); }
+  .history-item .h-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .history-item .h-meta { font-size: 11px; color: var(--text3); display: flex; gap: 8px; }
+  .history-item .h-preview { font-size: 12px; color: var(--text2); margin-top: 4px; 
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .h-badge { padding: 1px 6px; border-radius: 3px; font-size: 10px; }
+  .empty-history { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 13px; }
+
+  /* ===== API设置弹窗 ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; width: 560px; max-width: 95vw;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .modal-header {
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-size: 17px; font-weight: 700; }
+  .modal-close {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: none; background: var(--surface2); cursor: pointer;
+    color: var(--text2); font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { background: var(--surface3); color: var(--text); }
+  .modal-body { padding: 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* API预设卡片 */
+  .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .preset-card {
+    padding: 10px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); cursor: pointer;
+    text-align: center; transition: all 0.2s;
+    background: var(--surface3);
+  }
+  .preset-card:hover { border-color: var(--accent2); }
+  .preset-card.active { border-color: var(--accent); background: rgba(124,107,255,0.12); }
+  .preset-card .p-icon { font-size: 22px; margin-bottom: 4px; }
+  .preset-card .p-name { font-size: 12px; font-weight: 600; }
+
+  /* 测试结果 */
+  .test-result {
+    display: none; padding: 10px 12px; border-radius: var(--radius-sm);
+    font-size: 13px; margin-top: 10px;
+  }
+  .test-result.success { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3); color: var(--green); }
+  .test-result.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
+
+  /* ===== 分隔线 ===== */
+  .divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+  /* ===== 页面切换 ===== */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ===== 输出工具栏 ===== */
+  .output-toolbar {
+    display: flex; gap: 8px; align-items: center;
+    padding: 10px 14px; background: var(--surface2);
+    border-radius: var(--radius-sm); flex-wrap: wrap;
+  }
+  .output-toolbar .spacer { flex: 1; }
+
+  /* ===== 提示词编辑器 ===== */
+  .prompt-preview {
+    background: var(--surface3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    font-size: 12px; color: var(--text2); line-height: 1.7;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    max-height: 160px; overflow-y: auto; white-space: pre-wrap;
+  }
+
+  /* ===== 滚动条 ===== */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  /* ===== Toast通知 ===== */
+  .toast-container {
+    position: fixed; top: 20px; right: 20px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast {
+    padding: 10px 16px; border-radius: var(--radius-sm);
+    font-size: 13px; max-width: 300px;
+    animation: slideIn 0.3s ease;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+  .toast.success { background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.4); color: var(--green); }
+  .toast.error { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.4); color: var(--red); }
+  .toast.info { background: rgba(124,107,255,0.15); border: 1px solid rgba(124,107,255,0.4); color: var(--accent2); }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+
+  /* ===== 加载动画 ===== */
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white; border-radius: 50%;
+    animation: spin 0.8s linear infinite; display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== 响应式 ===== */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .preset-grid { grid-template-columns: repeat(2, 1fr); }
+    .level-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Toast容器 -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- API设置弹窗 -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ API 接口配置</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:rgba(124,107,255,0.08);border:1px solid rgba(124,107,255,0.25);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:14px;">
+        <div style="font-weight:600;color:var(--accent2);margin-bottom:4px;">💡 使用提示</div>
+        <div>① <strong>首次使用</strong>：从下方选择一个预设平台（OpenAI/DeepSeek等），系统自动填入对应地址和模型</div>
+        <div>② <strong>API Key</strong>：到对应平台控制台获取，填入后不会上传到任何第三方</div>
+        <div>③ <strong>测试通过后</strong> 保存，即可在创作页直接使用</div>
+      </div>
+      <label style="margin-bottom: 10px; display: block;">快速选择预设</label>
+      <div class="preset-grid">
+        <div class="preset-card" data-preset="openai" onclick="selectPreset(this, 'openai')">
+          <div class="p-icon">🤖</div>
+          <div class="p-name">OpenAI</div>
+        </div>
+        <div class="preset-card" data-preset="azure" onclick="selectPreset(this, 'azure')">
+          <div class="p-icon">☁️</div>
+          <div class="p-name">Azure</div>
+        </div>
+        <div class="preset-card" data-preset="deepseek" onclick="selectPreset(this, 'deepseek')">
+          <div class="p-icon">🔍</div>
+          <div class="p-name">DeepSeek</div>
+        </div>
+        <div class="preset-card" data-preset="qwen" onclick="selectPreset(this, 'qwen')">
+          <div class="p-icon">🌟</div>
+          <div class="p-name">通义千问</div>
+        </div>
+        <div class="preset-card" data-preset="zhipu" onclick="selectPreset(this, 'zhipu')">
+          <div class="p-icon">🧠</div>
+          <div class="p-name">智谱GLM</div>
+        </div>
+        <div class="preset-card" data-preset="custom" onclick="selectPreset(this, 'custom')">
+          <div class="p-icon">🔧</div>
+          <div class="p-name">自定义</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field">
+        <label>API 端点 (Base URL)</label>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">请求地址，格式为 <code style="background:var(--surface3);padding:1px 5px;border-radius:3px;">https://xxx/v1</code>，选预设时会自动填入</div>
+        <input type="url" id="apiUrl" placeholder="https://api.openai.com/v1">
+      </div>
+      <div class="field">
+        <label>API Key</label>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">密钥字符串，平台生成，<strong style="color:var(--yellow);">不会用于传输或存储</strong>，仅本次调用</div>
+        <div class="input-wrap">
+          <input type="password" id="apiKey" placeholder="sk-...">
+          <button class="toggle-eye" onclick="toggleKey()">👁</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>模型名称</label>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">在平台上部署的模型标识符，如 <code style="background:var(--surface3);padding:1px 5px;border-radius:3px;">gpt-4o-mini</code>、<code style="background:var(--surface3);padding:1px 5px;border-radius:3px;">deepseek-chat</code></div>
+        <input type="text" id="modelName" placeholder="gpt-4o-mini">
+      </div>
+      <div class="field">
+        <label>最大 Token 数</label>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">AI 单次回复的最大长度上限。2000≈1000汉字，建议 <strong style="color:var(--yellow);">1500-3000</strong>，过低可能截断输出</div>
+        <input type="text" id="maxTokens" placeholder="2000" value="2000">
+      </div>
+      <div class="field">
+        <label>Temperature（创意度）</label>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">
+          控制输出的随机性与创意程度（0=机械确定，2=极度随机）<br>
+          · <strong style="color:var(--green);">0.6-0.7</strong> 逻辑优先，严谨工整<br>
+          · <strong style="color:var(--accent2);">0.8-0.9</strong> 平衡之选，有创意但不跑偏（推荐）<br>
+          · <strong style="color:var(--orange);">1.0+</strong> 大胆跳跃，适合顶级/地狱难度
+        </div>
+        <input type="text" id="temperature" placeholder="0.85" value="0.85">
+      </div>
+
+      <button class="btn btn-secondary" style="width: 100%; margin-top: 4px;" onclick="testApi()">
+        🔌 测试连接
+      </button>
+      <div class="test-result" id="testResult"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveApiConfig()">💾 保存配置</button>
+    </div>
+  </div>
+</div>
+
+<!-- 导航栏 -->
+<nav class="navbar">
+  <div class="navbar-brand">
+    <span>🐢</span> 海龟汤创作工坊
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchPage('create', this)">✏️ 创作</button>
+    <button class="nav-tab" onclick="switchPage('history', this)">📚 历史</button>
+    <button class="nav-tab" onclick="switchPage('guide', this)">📖 指南</button>
+  </div>
+  <div class="status-area">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">未配置 API</span>
+    <button class="btn btn-secondary btn-sm" onclick="openModal()" style="margin-left: 8px;">
+      ⚙️ API 配置
+    </button>
+  </div>
+</nav>
+
+<!-- 主内容 -->
+<div class="main">
+
+  <!-- ===== 创作页 ===== -->
+  <div class="page active" id="page-create">
+    <div class="layout">
+
+      <!-- 左侧：参数面板 -->
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+
+        <!-- 难度选择 -->
+        <div class="panel">
+          <div class="panel-header"><span class="icon">🎯</span>复杂程度</div>
+          <div class="panel-body">
+            <div class="level-grid" id="levelGrid">
+              <div class="level-card lv1 selected" data-level="1" onclick="selectLevel(this)">
+                <div class="lv">Lv.1</div>
+                <div class="name">入门</div>
+                <div class="desc">信息隐藏</div>
+              </div>
+              <div class="level-card lv2" data-level="2" onclick="selectLevel(this)">
+                <div class="lv">Lv.2</div>
+                <div class="name">进阶</div>
+                <div class="desc">因果颠倒</div>
+              </div>
+              <div class="level-card lv3" data-level="3" onclick="selectLevel(this)">
+                <div class="lv">Lv.3★</div>
+                <div class="name">大师</div>
+                <div class="desc">叙述诡计</div>
+              </div>
+              <div class="level-card lv4" data-level="4" onclick="selectLevel(this)">
+                <div class="lv">Lv.4</div>
+                <div class="name">顶级</div>
+                <div class="desc">框架锁死</div>
+              </div>
+              <div class="level-card lv5" data-level="5" onclick="selectLevel(this)">
+                <div class="lv">Lv.5</div>
+                <div class="name">地狱</div>
+                <div class="desc">叙述者欺骗</div>
+              </div>
+              <div class="level-card" data-level="random" onclick="selectLevel(this)">
+                <div class="lv">🎲</div>
+                <div class="name">随机</div>
+                <div class="desc">惊喜难度</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 主题风格 -->
+        <div class="panel">
+          <div class="panel-header"><span class="icon">🎨</span>主题风格</div>
+          <div class="panel-body">
+            <div class="tag-grid" id="themeGrid">
+              <div class="tag selected" data-theme="日常推理" onclick="toggleTag(this)">日常推理</div>
+              <div class="tag" data-theme="悬疑犯罪" onclick="toggleTag(this)">悬疑犯罪</div>
+              <div class="tag" data-theme="都市怪谈" onclick="toggleTag(this)">都市怪谈</div>
+              <div class="tag" data-theme="家庭伦理" onclick="toggleTag(this)">家庭伦理</div>
+              <div class="tag" data-theme="职场商战" onclick="toggleTag(this)">职场商战</div>
+              <div class="tag" data-theme="历史题材" onclick="toggleTag(this)">历史题材</div>
+              <div class="tag" data-theme="医疗法律" onclick="toggleTag(this)">医疗法律</div>
+              <div class="tag" data-theme="科幻未来" onclick="toggleTag(this)">科幻未来</div>
+              <div class="tag" data-theme="乡村民俗" onclick="toggleTag(this)">乡村民俗</div>
+              <div class="tag" data-theme="校园青春" onclick="toggleTag(this)">校园青春</div>
+              <div class="tag" data-theme="温情治愈" onclick="toggleTag(this)">温情治愈</div>
+              <div class="tag" data-theme="随机" onclick="toggleTag(this)">🎲 随机</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 陷阱等级 -->
+        <div class="panel">
+          <div class="panel-header"><span class="icon">🪤</span>陷阱机制（可多选）</div>
+          <div class="panel-body">
+            <div class="trap-list" id="trapList">
+              <div class="trap-item selected" data-trap="Lv1" onclick="toggleTrap(this)">
+                <div class="trap-check"></div>
+                <div class="trap-info">
+                  <div class="trap-name" style="color: var(--green);">Lv.1 隐藏信息</div>
+                  <div class="trap-desc">玩家用常识脑补错误</div>
+                </div>
+              </div>
+              <div class="trap-item" data-trap="Lv2" onclick="toggleTrap(this)">
+                <div class="trap-check"></div>
+                <div class="trap-info">
+                  <div class="trap-name" style="color: var(--cyan);">Lv.2 因果颠倒</div>
+                  <div class="trap-desc">时序≠因果，逻辑链颠倒</div>
+                </div>
+              </div>
+              <div class="trap-item" data-trap="Lv3" onclick="toggleTrap(this)">
+                <div class="trap-check"></div>
+                <div class="trap-info">
+                  <div class="trap-name" style="color: var(--accent2);">Lv.3 叙述性诡计★</div>
+                  <div class="trap-desc">真话组合成假结论</div>
+                </div>
+              </div>
+              <div class="trap-item" data-trap="Lv4" onclick="toggleTrap(this)">
+                <div class="trap-check"></div>
+                <div class="trap-info">
+                  <div class="trap-name" style="color: var(--orange);">Lv.4 框架锁死</div>
+                  <div class="trap-desc">锁死解释维度，让玩家转圈</div>
+                </div>
+              </div>
+              <div class="trap-item" data-trap="Lv5" onclick="toggleTrap(this)">
+                <div class="trap-check"></div>
+                <div class="trap-info">
+                  <div class="trap-name" style="color: var(--red);">Lv.5 叙述者欺骗</div>
+                  <div class="trap-desc">叙述者视角/指代本身就是谜</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 高级设置 -->
+        <div class="panel">
+          <div class="panel-header"><span class="icon">🔧</span>高级选项</div>
+          <div class="panel-body" style="display: flex; flex-direction: column; gap: 14px;">
+            <div class="field">
+              <label>汤面字数范围</label>
+              <select id="wordCount">
+                <option value="micro">极简（30字以内，单句谜题）</option>
+                <option value="nano">超短（30-50字，两三句话）</option>
+                <option value="short">简短（50-100字，3-4句）</option>
+                <option value="medium" selected>适中（100-150字，4-5句）</option>
+                <option value="standard">标准（150-200字，5-6句）</option>
+                <option value="long">详尽（200-250字，有场景铺垫）</option>
+                <option value="epic">深度（250-300字，多细节版）</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>反转层数</label>
+              <select id="twistCount">
+                <option value="0">无反转（直觉误导，答案平静）</option>
+                <option value="1">单层反转（1次"原来如此"）</option>
+                <option value="2" selected>双层反转（2次反转，前层铺垫后层）</option>
+                <option value="3">三层反转·洋葱式（每层推翻上层）</option>
+                <option value="4">四层反转·深渊式（极度烧脑，慎用）</option>
+                <option value="spiral">螺旋式（反转后回归最初，产生悲剧感）</option>
+                <option value="false">伪反转（玩家以为反转了，其实没有）</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>主角名字 / 角色身份 <span style="color: var(--text3); font-size: 11px;">（可选）</span></label>
+              <input type="text" id="charName" placeholder="留空则由AI随机设定，如：张三、司机老李">
+            </div>
+            <div class="field">
+              <label>特殊要求 <span style="color: var(--text3); font-size: 11px;">（可选）</span></label>
+              <textarea id="customReq" placeholder="例如：结局出人意料、涉及职业特技、加入温情反转..." style="min-height: 60px;"></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 右侧：生成区域 -->
+      <div class="gen-panel">
+
+        <!-- 生成按钮区 -->
+        <div class="output-toolbar">
+          <button class="btn btn-secondary btn-sm" onclick="previewPrompt()">📋 预览提示词</button>
+          <div class="spacer"></div>
+          <button class="btn btn-secondary btn-sm" onclick="copyOutput()" id="copyBtn" style="display:none">📋 复制</button>
+          <button class="btn btn-secondary btn-sm" onclick="saveToHistory()" id="saveBtn" style="display:none">💾 保存</button>
+          <button class="btn btn-danger btn-sm" onclick="clearOutput()" id="clearBtn" style="display:none">🗑 清空</button>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button class="gen-btn" id="genBtn" onclick="generate()">
+            ✨ 开始创作
+          </button>
+          <button class="btn btn-secondary" id="stopBtn" style="display:none; padding: 14px 18px;" onclick="stopGenerate()">
+            ⏹ 停止
+          </button>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar" id="statusBar">
+          <span id="statusMsg">就绪 · 配置参数后点击"开始创作"</span>
+          <span id="tokenCount" style="color: var(--text3);"></span>
+        </div>
+
+        <!-- 流式进度条 -->
+        <div id="progressBar" style="display: none;">
+          <div class="progress-bar"></div>
+        </div>
+
+        <!-- 输出区域 -->
+        <div class="output-area" id="outputArea">
+          <div class="output-placeholder" id="outputPlaceholder">
+            <div class="big-icon">🐢</div>
+            <div class="hint">配置好参数，点击"开始创作"，AI 将根据海龟汤创作规则生成故事</div>
+          </div>
+          <div id="outputContent" class="soup-output" style="display: none;"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 历史记录页 ===== -->
+  <div class="page" id="page-history">
+    <div style="max-width: 900px; margin: 0 auto;">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="icon">📚</span>历史记录
+          <div style="flex: 1;"></div>
+          <button class="btn btn-danger btn-sm" onclick="clearAllHistory()">🗑 清空全部</button>
+        </div>
+        <div class="panel-body">
+          <div id="historyList" class="history-list">
+            <div class="empty-history">暂无历史记录<br><span style="font-size: 11px; margin-top: 8px; display: block;">在创作页生成内容后点击"保存"即可存入历史</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 指南页 ===== -->
+  <div class="page" id="page-guide">
+    <div style="max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;">
+
+      <div class="panel">
+        <div class="panel-header"><span class="icon">🐢</span>什么是海龟汤？</div>
+        <div class="panel-body" style="line-height: 1.9; color: var(--text2); font-size: 14px;">
+          海龟汤是一种横向思维谜题游戏。出题者提供一个诡异场景（<strong style="color: var(--accent2)">汤面</strong>），玩家通过提问（只能回答"是/否/无关"）逐步还原隐藏真相（<strong style="color: var(--green)">汤底</strong>）。
+          好的海龟汤需要有逻辑严密的因果链，每句汤面都经得起提问，真相揭晓时让玩家"恍然大悟"而非"莫名其妙"。
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="icon">🎯</span>难度等级说明</div>
+        <div class="panel-body">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: var(--surface2); border-radius: var(--radius-sm);">
+              <span style="color: var(--green); font-weight: 700; min-width: 50px;">Lv.1</span>
+              <div><strong style="color: var(--text);">入门</strong> — 隐藏关键信息，玩家用常识脑补错误方向。适合初次接触海龟汤的玩家。</div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: var(--surface2); border-radius: var(--radius-sm);">
+              <span style="color: var(--cyan); font-weight: 700; min-width: 50px;">Lv.2</span>
+              <div><strong style="color: var(--text);">进阶</strong> — 时序≠因果，因果链被颠倒，让玩家陷入错误逻辑推导。</div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: var(--surface2); border-radius: var(--radius-sm);">
+              <span style="color: var(--accent2); font-weight: 700; min-width: 50px;">Lv.3★</span>
+              <div><strong style="color: var(--text);">大师级</strong> — 叙述性诡计，每句话都是真的，但组合在一起导向假结论。最经典的海龟汤机制。</div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: var(--surface2); border-radius: var(--radius-sm);">
+              <span style="color: var(--orange); font-weight: 700; min-width: 50px;">Lv.4</span>
+              <div><strong style="color: var(--text);">顶级</strong> — 锁死解释框架，玩家一直在错误维度思考，很难跳出思维定势。</div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: var(--surface2); border-radius: var(--radius-sm);">
+              <span style="color: var(--red); font-weight: 700; min-width: 50px;">Lv.5</span>
+              <div><strong style="color: var(--text);">地狱</strong> — 叙述者本身不可信，视角欺骗或指代欺骗，叙述者是谜题的一部分。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="icon">✅</span>创作自检清单（11维）</div>
+        <div class="panel-body">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 13px;">
+            <div style="padding: 10px; background: var(--surface2); border-radius: var(--radius-sm);">
+              <div style="color: var(--cyan); font-weight: 600; margin-bottom: 6px;">物理层</div>
+              <div style="color: var(--text2); line-height: 1.7;">①动作可行<br>④语义守恒</div>
+            </div>
+            <div style="padding: 10px; background: var(--surface2); border-radius: var(--radius-sm);">
+              <div style="color: var(--green); font-weight: 600; margin-bottom: 6px;">逻辑层</div>
+              <div style="color: var(--text2); line-height: 1.7;">②动机合理<br>③时间匹配</div>
+            </div>
+            <div style="padding: 10px; background: var(--surface2); border-radius: var(--radius-sm);">
+              <div style="color: var(--yellow); font-weight: 600; margin-bottom: 6px;">信息层</div>
+              <div style="color: var(--text2); line-height: 1.7;">⑤线索归宿<br>⑨存在证明<br>⑩数量精确</div>
+            </div>
+            <div style="padding: 10px; background: var(--surface2); border-radius: var(--radius-sm);">
+              <div style="color: var(--accent2); font-weight: 600; margin-bottom: 6px;">叙述层</div>
+              <div style="color: var(--text2); line-height: 1.7;">⑥视角一致<br>⑦默认状态<br>⑧主语一致</div>
+            </div>
+            <div style="padding: 10px; background: var(--surface2); border-radius: var(--radius-sm);">
+              <div style="color: var(--red); font-weight: 600; margin-bottom: 6px;">唯一性</div>
+              <div style="color: var(--text2); line-height: 1.7;">⑪解唯一</div>
+            </div>
+            <div style="padding: 10px; background: var(--surface2); border-radius: var(--radius-sm);">
+              <div style="color: var(--orange); font-weight: 600; margin-bottom: 6px;">杠精三问</div>
+              <div style="color: var(--text2); line-height: 1.7;">这合理吗？<br>为何没被发现？<br>不这样行不行？</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== 状态管理 =====
+const state = {
+  apiConfig: null,
+  selectedLevel: '1',
+  selectedThemes: ['日常推理'],
+  selectedTraps: ['Lv1'],
+  generating: false,
+  abortController: null,
+  currentOutput: '',
+  history: [],
+  charCount: 0
+};
+
+// ===== 初始化 =====
+window.onload = () => {
+  loadConfig();
+  loadHistory();
+};
+
+function loadConfig() {
+  const saved = localStorage.getItem('turtleSoupApiConfig');
+  if (saved) {
+    state.apiConfig = JSON.parse(saved);
+    updateStatusDot(true);
+  }
+  // 加载历史
+  const hist = localStorage.getItem('turtleSoupHistory');
+  if (hist) state.history = JSON.parse(hist);
+}
+
+function loadHistory() {
+  const hist = localStorage.getItem('turtleSoupHistory');
+  if (hist) {
+    state.history = JSON.parse(hist);
+    renderHistoryList();
+  }
+}
+
+function bindTrapEvents() { /* 改用内联 onclick */ }
+
+function toggleTrap(el) {
+  el.classList.toggle('selected');
+  const trap = el.dataset.trap;
+  if (el.classList.contains('selected')) {
+    if (!state.selectedTraps.includes(trap)) state.selectedTraps.push(trap);
+  } else {
+    state.selectedTraps = state.selectedTraps.filter(t => t !== trap);
+  }
+}
+
+// ===== 页面切换 =====
+function switchPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'history') renderHistoryList();
+}
+
+// ===== 状态点 =====
+function updateStatusDot(connected, text) {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  if (connected) {
+    dot.className = 'status-dot connected';
+    txt.textContent = text || (state.apiConfig ? `${state.apiConfig.model || '模型'} · 已连接` : '已连接');
+  } else {
+    dot.className = 'status-dot';
+    txt.textContent = text || '未配置 API';
+  }
+}
+
+// ===== 难度选择 =====
+function selectLevel(el) {
+  document.querySelectorAll('.level-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedLevel = el.dataset.level;
+}
+
+// ===== 主题选择 =====
+function toggleTag(el) {
+  const isRandom = el.dataset.theme === '随机';
+  if (isRandom) {
+    document.querySelectorAll('.tag').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    state.selectedThemes = ['随机'];
+    return;
+  }
+  document.querySelectorAll('[data-theme="随机"]').forEach(t => t.classList.remove('selected'));
+  el.classList.toggle('selected');
+  const theme = el.dataset.theme;
+  if (el.classList.contains('selected')) {
+    state.selectedThemes = state.selectedThemes.filter(t => t !== '随机');
+    if (!state.selectedThemes.includes(theme)) state.selectedThemes.push(theme);
+  } else {
+    state.selectedThemes = state.selectedThemes.filter(t => t !== theme);
+  }
+  if (state.selectedThemes.length === 0) {
+    el.classList.add('selected');
+    state.selectedThemes = [theme];
+  }
+}
+
+// ===== API 弹窗 =====
+const presets = {
+  openai: { url: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
+  azure: { url: 'https://YOUR_RESOURCE.openai.azure.com/openai/deployments/YOUR_DEPLOYMENT', model: 'gpt-4' },
+  deepseek: { url: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
+  qwen: { url: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-turbo' },
+  zhipu: { url: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' },
+  custom: { url: '', model: '' }
+};
+
+function openModal() {
+  const modal = document.getElementById('apiModal');
+  modal.classList.add('show');
+  if (state.apiConfig) {
+    document.getElementById('apiUrl').value = state.apiConfig.url || '';
+    document.getElementById('apiKey').value = state.apiConfig.key || '';
+    document.getElementById('modelName').value = state.apiConfig.model || '';
+    document.getElementById('maxTokens').value = state.apiConfig.maxTokens || '2000';
+    document.getElementById('temperature').value = state.apiConfig.temperature || '0.85';
+  }
+}
+
+function closeModal() {
+  document.getElementById('apiModal').classList.remove('show');
+}
+
+function selectPreset(el, name) {
+  document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const p = presets[name];
+  if (p.url) document.getElementById('apiUrl').value = p.url;
+  if (p.model) document.getElementById('modelName').value = p.model;
+}
+
+function toggleKey() {
+  const input = document.getElementById('apiKey');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+async function testApi() {
+  const url = document.getElementById('apiUrl').value.trim();
+  const key = document.getElementById('apiKey').value.trim();
+  const model = document.getElementById('modelName').value.trim();
+  const resultEl = document.getElementById('testResult');
+  if (!url || !key || !model) {
+    showTestResult('error', '❌ 请填写 API 端点、Key 和模型名称');
+    return;
+  }
+  showTestResult('info', '⏳ 正在测试连接...');
+  try {
+    const resp = await fetch(url.replace(/\/$/, '') + '/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ model, messages: [{ role: 'user', content: 'hi' }], max_tokens: 10 })
+    });
+    if (resp.ok) {
+      showTestResult('success', `✅ 连接成功！模型 ${model} 可用`);
+    } else {
+      const err = await resp.json();
+      showTestResult('error', `❌ 失败: ${err.error?.message || resp.status}`);
+    }
+  } catch (e) {
+    showTestResult('error', `❌ 网络错误: ${e.message}`);
+  }
+}
+
+function showTestResult(type, msg) {
+  const el = document.getElementById('testResult');
+  el.className = `test-result ${type}`;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function saveApiConfig() {
+  const url = document.getElementById('apiUrl').value.trim();
+  const key = document.getElementById('apiKey').value.trim();
+  const model = document.getElementById('modelName').value.trim();
+  const maxTokens = document.getElementById('maxTokens').value.trim();
+  const temperature = document.getElementById('temperature').value.trim();
+  if (!url || !key || !model) {
+    toast('error', '请填写 API 端点、Key 和模型名称');
+    return;
+  }
+  state.apiConfig = { url, key, model, maxTokens: parseInt(maxTokens) || 2000, temperature: parseFloat(temperature) || 0.85 };
+  localStorage.setItem('turtleSoupApiConfig', JSON.stringify(state.apiConfig));
+  updateStatusDot(true);
+  closeModal();
+  toast('success', `✅ 已保存 · ${model}`);
+}
+
+// ===== 构建 Prompt =====
+function buildSystemPrompt() {
+  return `你是一位专业的海龟汤（横向思维谜题）创作大师。你必须严格遵循以下创作规则：
+
+## 什么是海龟汤
+海龟汤 = 汤面（诡异场景）+ 汤底（隐藏真相）。玩家通过是非提问逐步推理出真相。
+
+## 创作流程
+### Step 1 · 先设计汤底，再写汤面
+汤底构思方向：
+- 信息差：玩家以为X，实际是Y
+- 因果颠倒：A看似导致B，实际B先于A或由C驱动
+- 身份错位：主角不是玩家以为的那个人
+
+汤面编写原则：
+- 只展示事实，不给结论
+- 每句话经得起"这是真的吗"的是非提问
+- 3-6句话，禁止出现答案关键词
+
+### Step 2 · 陷阱等级说明
+- Lv.1：隐藏关键信息，玩家用常识脑补错误（入门）
+- Lv.2：时序≠因果，因果链颠倒（进阶）
+- Lv.3★：每句真话组合成假结论（叙述性诡计，大师级）
+- Lv.4：锁死解释框架，玩家在错误维度转圈（大师级+）
+- Lv.5：叙述者本身不可信（视角/指代欺骗，顶级）
+
+### Step 3 · 裁剪手术
+- 名词降维：妻子→"那个女人"；假肢→"腿"
+- 动作去因：保留动作结果，切除起因
+- 时间定锚：只描述异常瞬间，封闭前后语境
+- 感官红鲱鱼：加1-2个强烈但无关的感官细节
+- 视野遮蔽：限制视角，叙述者不自知关键信息
+
+## 强制自检清单（发布前必须全部通过）
+物理层：①动作可行 ④语义守恒
+逻辑层：②动机合理 ③时间匹配
+信息层：⑤线索归宿 ⑨存在证明 ⑩数量精确
+叙述层：⑥视角一致 ⑦默认状态 ⑧主语一致
+唯一性：⑪解唯一
+
+杠精三问：
+- Q1"这合理吗？"→ 能用汤面信息怼回去？
+- Q2"为什么没被发现？"→ 能用环境闭环？
+- Q3"不这么做行不行？"→ 行为有不可替代的必要性？
+
+**全部通过才能发布。**
+
+## 禁止内容
+- 禁止涉及性暴力、儿童伤害等内容
+- 禁止物理上不可能发生的情节
+- 禁止逻辑自相矛盾的汤底
+- 全部使用中文输出
+
+## 输出格式（严格按此格式）
+## 汤面
+[3-6句，内容]
+
+## 汤底
+[完整真相 + 因果逻辑]
+
+## 创作笔记
+- 陷阱等级：[使用的Lv]
+- 裁剪层级：[使用了哪些裁剪手法]
+- 核心陷阱句：[哪句话是关键骗局]
+- 自检：[11维通过情况概述]`;
+}
+
+function buildUserPrompt() {
+  const level = state.selectedLevel === 'random'
+    ? `Lv.${Math.ceil(Math.random() * 5)}`
+    : `Lv.${state.selectedLevel}`;
+  const themes = state.selectedThemes.includes('随机')
+    ? ['日常推理', '悬疑犯罪', '都市怪谈', '家庭伦理', '职场商战', '历史题材', '医疗法律'][Math.floor(Math.random() * 7)]
+    : state.selectedThemes.join('、');
+  const traps = state.selectedTraps.length > 0 ? state.selectedTraps.join('+') : 'Lv.1';
+  const wordCount = {
+    micro:    '30字以内，极度精简，仅用一句话描述诡异事件',
+    nano:     '30-50字，两三句话，高度凝练',
+    short:    '50-100字，3-4句，简洁有力',
+    medium:   '100-150字，4-5句，保持克制',
+    standard: '150-200字，5-6句，适度铺垫',
+    long:     '200-250字，可加入场景细节和感官描述',
+    epic:     '250-300字，充分展开，多个细节层次，但仍不泄露答案'
+  }[document.getElementById('wordCount').value] || '100-150字';
+  const twistMap = {
+    '0':      '无反转：不设置反转，但汤面依靠直觉误导制造悬念，真相揭晓时平静而出乎意料',
+    '1':      '单层反转：设计1次"原来如此"的反转，真相与第一印象完全相反',
+    '2':      '双层反转：设计2次反转，第一次反转让玩家以为找到答案，第二次再颠覆，前层为后层铺垫',
+    '3':      '三层反转（洋葱式）：设计3层嵌套反转，每层真相都推翻上一层，最终揭示最深层的真相',
+    '4':      '四层反转（深渊式）：设计4次极限反转，极度烧脑，每次反转都应有充分的伏笔支撑，逻辑必须严密',
+    'spiral': '螺旋式反转：经历多次反转后，最终答案以一种悲剧或宿命的方式回归到最初的第一印象，产生强烈的命运感和情绪震撼',
+    'false':  '伪反转：表面上看似有大反转，玩家猜测出"反转答案"后，真相揭露其实和最初直觉完全一样，反转本身是陷阱'
+  };
+  const twistCount = twistMap[document.getElementById('twistCount').value] || twistMap['2'];
+  const customReq = document.getElementById('customReq').value.trim();
+  const charName = document.getElementById('charName').value.trim();
+
+  let prompt = `请创作一道海龟汤谜题，要求如下：
+
+- 难度等级：${level}
+- 主题风格：${themes}
+- 陷阱机制：使用${traps}组合
+- 汤面字数：${wordCount}
+- 反转设计：${twistCount}`;
+
+  if (charName) prompt += `\n- 主角设定：故事主角名字为"${charName}"，所有情节围绕此角色展开`;
+  if (customReq) prompt += `\n- 特殊要求：${customReq}`;
+  prompt += `\n\n请先在脑中完成11维自检，通过后再输出。严格按照"汤面/汤底/创作笔记"三段式格式输出，全部使用中文。`;
+  return prompt;
+}
+
+// ===== 预览提示词 =====
+function previewPrompt() {
+  if (!state.apiConfig) {
+    toast('error', '请先配置 API');
+    return;
+  }
+  const userPrompt = buildUserPrompt();
+  const area = document.getElementById('outputArea');
+  const placeholder = document.getElementById('outputPlaceholder');
+  const content = document.getElementById('outputContent');
+  placeholder.style.display = 'none';
+  content.style.display = 'block';
+  content.innerHTML = `<h2><span class="badge badge-note">📋 提示词预览</span></h2>
+    <div class="note-text" style="font-family: monospace; font-size: 12px; white-space: pre-wrap;">${escapeHtml(userPrompt)}</div>`;
+}
+
+// ===== 生成 =====
+async function generate() {
+  if (!state.apiConfig) {
+    openModal();
+    toast('info', '请先配置 API 接口');
+    return;
+  }
+  if (state.generating) return;
+  state.generating = true;
+  state.abortController = new AbortController();
+  state.currentOutput = '';
+  state.charCount = 0;
+
+  // UI状态
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('genBtn').innerHTML = '<span class="spinner"></span> 创作中...';
+  document.getElementById('stopBtn').style.display = 'inline-flex';
+  document.getElementById('progressBar').style.display = 'block';
+  document.getElementById('statusBar').className = 'status-bar generating';
+  document.getElementById('statusMsg').textContent = '🧠 AI 正在构思汤底...';
+  document.getElementById('copyBtn').style.display = 'none';
+  document.getElementById('saveBtn').style.display = 'none';
+  document.getElementById('clearBtn').style.display = 'none';
+
+  const placeholder = document.getElementById('outputPlaceholder');
+  const content = document.getElementById('outputContent');
+  placeholder.style.display = 'none';
+  content.style.display = 'block';
+  content.innerHTML = '';
+  content.className = 'soup-output stream-cursor';
+
+  try {
+    const resp = await fetch(state.apiConfig.url.replace(/\/$/, '') + '/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.apiConfig.key}`
+      },
+      body: JSON.stringify({
+        model: state.apiConfig.model,
+        messages: [
+          { role: 'system', content: buildSystemPrompt() },
+          { role: 'user', content: buildUserPrompt() }
+        ],
+        max_tokens: state.apiConfig.maxTokens || 2000,
+        temperature: state.apiConfig.temperature || 0.85,
+        stream: true
+      }),
+      signal: state.abortController.signal
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || `HTTP ${resp.status}`);
+    }
+
+    document.getElementById('statusMsg').textContent = '✍️ 正在生成...';
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const json = JSON.parse(data);
+          const delta = json.choices?.[0]?.delta?.content || '';
+          if (delta) {
+            state.currentOutput += delta;
+            state.charCount += delta.length;
+            document.getElementById('tokenCount').textContent = `${state.charCount} 字`;
+            renderStreamOutput(state.currentOutput);
+          }
+        } catch { /* ignore parse errors */ }
+      }
+    }
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      document.getElementById('statusMsg').textContent = '⏹ 已停止生成';
+    } else {
+      toast('error', `生成失败: ${e.message}`);
+      document.getElementById('statusMsg').textContent = `❌ 错误: ${e.message}`;
+    }
+  } finally {
+    state.generating = false;
+    const content = document.getElementById('outputContent');
+    content.className = 'soup-output';
+    document.getElementById('genBtn').disabled = false;
+    document.getElementById('genBtn').innerHTML = '✨ 再次创作';
+    document.getElementById('stopBtn').style.display = 'none';
+    document.getElementById('progressBar').style.display = 'none';
+    document.getElementById('statusBar').className = 'status-bar';
+    if (state.currentOutput) {
+      document.getElementById('copyBtn').style.display = 'inline-flex';
+      document.getElementById('saveBtn').style.display = 'inline-flex';
+      document.getElementById('clearBtn').style.display = 'inline-flex';
+      document.getElementById('statusMsg').textContent = `✅ 生成完成 · ${state.charCount} 字`;
+      renderFinalOutput(state.currentOutput);
+    }
+  }
+}
+
+function stopGenerate() {
+  if (state.abortController) state.abortController.abort();
+}
+
+// ===== 流式渲染 =====
+function renderStreamOutput(text) {
+  const content = document.getElementById('outputContent');
+  content.innerHTML = escapeHtml(text).replace(/\n/g, '<br>');
+}
+
+function renderFinalOutput(text) {
+  const content = document.getElementById('outputContent');
+  // 解析三段式格式
+  let html = '';
+  const lines = text.split('\n');
+  let section = '';
+  let buffer = [];
+
+  const flush = () => {
+    if (!buffer.length) return;
+    const txt = buffer.join('\n').trim();
+    if (!txt) return;
+    if (section === 'soup') {
+      html += `<div class="soup-text">${escapeHtml(txt).replace(/\n/g, '<br>')}</div>`;
+    } else if (section === 'answer') {
+      html += `<div class="answer-text">${escapeHtml(txt).replace(/\n/g, '<br>')}</div>`;
+    } else if (section === 'note') {
+      html += `<div class="note-text">${escapeHtml(txt).replace(/\n/g, '<br>')}</div>`;
+    } else {
+      html += `<p style="color: var(--text2); margin-bottom: 10px;">${escapeHtml(txt).replace(/\n/g, '<br>')}</p>`;
+    }
+    buffer = [];
+  };
+
+  for (const line of lines) {
+    if (line.match(/^##\s*汤面/)) {
+      flush();
+      section = 'soup';
+      html += `<h2><span class="badge badge-soup">🍜 汤面</span></h2>`;
+    } else if (line.match(/^##\s*汤底/)) {
+      flush();
+      section = 'answer';
+      html += `<h2><span class="badge badge-answer">💡 汤底</span></h2>`;
+    } else if (line.match(/^##\s*创作笔记/)) {
+      flush();
+      section = 'note';
+      html += `<h2><span class="badge badge-note">📝 创作笔记</span></h2>`;
+    } else {
+      buffer.push(line);
+    }
+  }
+  flush();
+
+  content.innerHTML = html || escapeHtml(text).replace(/\n/g, '<br>');
+}
+
+// ===== 工具函数 =====
+function escapeHtml(text) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function copyOutput() {
+  navigator.clipboard.writeText(state.currentOutput).then(() => toast('success', '已复制到剪贴板'));
+}
+
+function clearOutput() {
+  state.currentOutput = '';
+  state.charCount = 0;
+  document.getElementById('outputPlaceholder').style.display = 'flex';
+  document.getElementById('outputContent').style.display = 'none';
+  document.getElementById('copyBtn').style.display = 'none';
+  document.getElementById('saveBtn').style.display = 'none';
+  document.getElementById('clearBtn').style.display = 'none';
+  document.getElementById('tokenCount').textContent = '';
+  document.getElementById('statusMsg').textContent = '就绪 · 配置参数后点击"开始创作"';
+}
+
+function saveToHistory() {
+  if (!state.currentOutput) return;
+  const theme = state.selectedThemes[0] || '未知';
+  const level = state.selectedLevel === 'random' ? '随机' : `Lv.${state.selectedLevel}`;
+  const preview = state.currentOutput.replace(/##.*\n/g, '').trim().slice(0, 50);
+  const item = {
+    id: Date.now(),
+    time: new Date().toLocaleString('zh-CN'),
+    theme, level, preview,
+    content: state.currentOutput
+  };
+  state.history.unshift(item);
+  if (state.history.length > 50) state.history = state.history.slice(0, 50);
+  localStorage.setItem('turtleSoupHistory', JSON.stringify(state.history));
+  toast('success', '✅ 已保存到历史记录');
+}
+
+function renderHistoryList() {
+  const list = document.getElementById('historyList');
+  if (!state.history.length) {
+    list.innerHTML = '<div class="empty-history">暂无历史记录<br><span style="font-size: 11px; margin-top: 8px; display: block;">在创作页生成内容后点击"保存"即可存入历史</span></div>';
+    return;
+  }
+  const levelColors = { '1': 'var(--green)', '2': 'var(--cyan)', '3': 'var(--accent2)', '4': 'var(--orange)', '5': 'var(--red)', 'random': 'var(--text2)' };
+  list.innerHTML = state.history.map(item => `
+    <div class="history-item" onclick="loadHistory_item(${item.id})">
+      <div class="h-title">
+        <span style="color: ${levelColors[item.level?.replace('Lv.','')?.toLowerCase()] || 'var(--text2)'}; font-size: 11px; margin-right: 6px;">[${item.level}]</span>
+        ${escapeHtml(item.theme)}
+        <span style="float: right; font-size: 11px; color: var(--text3);">${item.time}</span>
+      </div>
+      <div class="h-preview">${escapeHtml(item.preview)}...</div>
+    </div>
+  `).join('');
+}
+
+function loadHistory_item(id) {
+  const item = state.history.find(h => h.id === id);
+  if (!item) return;
+  state.currentOutput = item.content;
+  switchPage('create', document.querySelector('.nav-tab'));
+  document.querySelector('.nav-tab').classList.add('active');
+  document.getElementById('page-create').classList.add('active');
+  document.getElementById('page-history').classList.remove('active');
+  document.getElementById('outputPlaceholder').style.display = 'none';
+  document.getElementById('outputContent').style.display = 'block';
+  renderFinalOutput(item.content);
+  document.getElementById('copyBtn').style.display = 'inline-flex';
+  document.getElementById('saveBtn').style.display = 'none';
+  document.getElementById('clearBtn').style.display = 'inline-flex';
+  document.getElementById('statusMsg').textContent = `📚 已加载历史 · ${item.time}`;
+}
+
+function clearAllHistory() {
+  if (!confirm('确定清空全部历史记录？')) return;
+  state.history = [];
+  localStorage.removeItem('turtleSoupHistory');
+  renderHistoryList();
+  toast('info', '历史记录已清空');
+}
+
+// ===== Toast =====
+function toast(type, msg, duration = 3000) {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'slideOut 0.3s ease forwards';
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
+
+// 点击背景关闭弹窗
+document.getElementById('apiModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+</body>
+</html>
