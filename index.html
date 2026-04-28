@@ -4,16 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🐢 海龟汤创作工坊</title>
-<!-- Supabase 异步加载，避免阻塞页面 -->
-<script>
-(function() {
-  const script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  script.onload = function() { window.supabaseReady = true; };
-  script.onerror = function() { window.supabaseReady = false; };
-  document.head.appendChild(script);
-})();
-</script>
+<!-- Supabase CDN（国内可用） -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #0f1117;
@@ -1566,23 +1558,15 @@ document.getElementById('apiModal').addEventListener('click', function(e) {
 
 <!-- ===== Supabase Auth ===== -->
 <script>
-// ⚠️ 替换为你自己的 Supabase 凭据
-const SUPABASE_URL = 'https://askdqhqhvkklzmgcqtuy.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_afquHeJWh5_4emAtev4pDg_5cXWSDk1';
-
-let supabase = null;
-try {
-  if (typeof window.Supabase !== 'undefined') {
-    const { createClient } = window.Supabase;
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  }
-} catch (e) {
-  console.warn('Supabase 客户端创建失败:', e.message);
-}
+// Supabase 客户端和凭据现在在 initAuth() 中初始化
+// 这里只定义辅助函数
 
 let isRegisterMode = false;
 
 // ===== 初始化 =====
+let supabase = null;
+let supabaseReady = false;
+
 async function initAuth() {
   // 强制 5 秒后必定显示登录界面，防止卡死
   const forceShow = setTimeout(() => {
@@ -1590,11 +1574,52 @@ async function initAuth() {
     const card = document.getElementById('authCard');
     if (loading) loading.style.display = 'none';
     if (card) card.style.display = 'block';
+    console.warn('Supabase 加载超时，强制显示登录界面');
   }, 5000);
 
+  // 等待 Supabase 加载完成（最多等 4.5 秒）
+  const waitForSupabase = () => {
+    return new Promise(resolve => {
+      if (typeof window.Supabase !== 'undefined') {
+        resolve();
+        return;
+      }
+      let waited = 0;
+      const interval = setInterval(() => {
+        waited += 100;
+        if (typeof window.Supabase !== 'undefined') {
+          clearInterval(interval);
+          resolve();
+        } else if (waited >= 4500) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100);
+    });
+  };
+
+  await waitForSupabase();
+
   // 检查 Supabase 是否加载成功
-  if (typeof supabase === 'undefined') {
+  if (typeof window.Supabase === 'undefined') {
     console.warn('Supabase 未加载，显示登录界面');
+    clearTimeout(forceShow);
+    const loading = document.getElementById('authLoading');
+    const card = document.getElementById('authCard');
+    if (loading) loading.style.display = 'none';
+    if (card) card.style.display = 'block';
+    return;
+  }
+
+  // 创建 Supabase 客户端
+  const SUPABASE_URL = 'https://askdqhqhvkklzmgcqtuy.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_afquHeJWh5_4emAtev4pDg_5cXWSDk1';
+  try {
+    const { createClient } = window.Supabase;
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseReady = true;
+  } catch (e) {
+    console.warn('Supabase 客户端创建失败:', e.message);
     clearTimeout(forceShow);
     const loading = document.getElementById('authLoading');
     const card = document.getElementById('authCard');
