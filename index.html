@@ -1621,8 +1621,16 @@ async function initAuth() {
     return;
   }
 
+  // Supabase 连接超时保护 - 5秒
+  const supabaseTimeout = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('连接超时')), 5000);
+  });
+  
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await Promise.race([
+      supabase.auth.getSession(),
+      supabaseTimeout
+    ]);
     clearTimeout(forceShow);
     showMainUI(session);
   } catch (e) {
