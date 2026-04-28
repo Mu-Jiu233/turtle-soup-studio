@@ -4,8 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🐢 海龟汤创作工坊</title>
-<!-- Supabase CDN（国内可用） -->
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<!-- Supabase 异步加载，不阻塞页面渲染 -->
+<script>
+(function() {
+  // 方案1: unpkg UMD (非模块)
+  var scripts = [
+    'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js',
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'
+  ];
+  
+  function tryLoad(idx) {
+    if (idx >= scripts.length) {
+      console.warn('Supabase CDN 全部加载失败');
+      return;
+    }
+    var s = document.createElement('script');
+    s.src = scripts[idx];
+    s.onload = function() { window._supabaseLoaded = true; };
+    s.onerror = function() { tryLoad(idx + 1); };
+    document.head.appendChild(s);
+  }
+  
+  tryLoad(0);
+})();
+</script>
 <style>
   :root {
     --bg: #0f1117;
