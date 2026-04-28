@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🐢 海龟汤创作工坊</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #0f1117;
@@ -417,9 +418,144 @@
     .preset-grid { grid-template-columns: repeat(2, 1fr); }
     .level-grid { grid-template-columns: repeat(3, 1fr); }
   }
+
+  /* ===== Auth 登录界面 ===== */
+  #authScreen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(135deg, #0f1117 0%, #1a1035 50%, #0f1a2e 100%);
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+  }
+  .auth-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 40px 36px;
+    width: 400px; max-width: 95vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 80px rgba(124,107,255,0.08);
+    animation: fadeUp 0.5s ease;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .auth-logo { text-align: center; margin-bottom: 28px; }
+  .auth-logo .logo { font-size: 56px; display: block; margin-bottom: 10px; }
+  .auth-logo h1 {
+    font-size: 22px; font-weight: 800;
+    background: linear-gradient(135deg, #a78bfa, #67e8f9);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+  .auth-logo p { font-size: 13px; color: var(--text3); }
+
+  .auth-tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--surface2); border-radius: 10px; padding: 4px; }
+  .auth-tab {
+    flex: 1; padding: 8px; border-radius: 8px; font-size: 14px;
+    text-align: center; cursor: pointer; color: var(--text2);
+    border: none; background: none; transition: all 0.2s;
+    font-family: inherit; font-weight: 500;
+  }
+  .auth-tab.active { background: var(--surface3); color: var(--accent2); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .auth-field { margin-bottom: 14px; }
+  .auth-field label { font-size: 13px; color: var(--text2); margin-bottom: 6px; display: block; }
+  .auth-field input {
+    width: 100%; padding: 11px 14px;
+    background: var(--surface3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); font-size: 15px;
+    font-family: inherit; outline: none; transition: border-color 0.2s;
+  }
+  .auth-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .auth-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--text3); font-size: 12px; }
+  .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .btn-google {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 11px; border-radius: 10px;
+    background: white; color: #333; border: 1px solid #ddd;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; font-family: inherit;
+  }
+  .btn-google:hover { background: #f5f5f5; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .btn-auth {
+    width: 100%; padding: 12px; border-radius: 10px; border: none;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    background: linear-gradient(135deg, #6d57f5, #a855f7);
+    color: white; font-family: inherit;
+    box-shadow: 0 4px 15px rgba(109,87,245,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-auth:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(109,87,245,0.5); }
+  .btn-auth:disabled { opacity: 0.5; cursor: not-allowed; }
+  .auth-switch { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text3); }
+  .auth-switch a { color: var(--accent2); cursor: pointer; text-decoration: none; }
+  .auth-switch a:hover { text-decoration: underline; }
+  .auth-error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--red); padding: 8px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; display: none; }
+  .auth-success { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3); color: var(--green); padding: 8px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; display: none; }
+  .auth-loading {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 300px; gap: 16px; color: var(--text2);
+  }
+  .auth-loading .big { font-size: 48px; }
+  .auth-loading .sp { font-size: 14px; color: var(--text3); }
+  .user-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 20px;
+    background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3);
+    color: var(--green); font-size: 13px; font-weight: 500;
+    max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .user-avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: linear-gradient(135deg, #6d57f5, #a855f7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white; flex-shrink: 0;
+  }
+  .main-content { display: none; }
+  .main-content.show { display: block; }
 </style>
 </head>
 <body>
+
+<!-- ===== Auth 登录界面 ===== -->
+<div id="authScreen">
+  <div id="authLoading" class="auth-loading">
+    <div class="big">🐢</div>
+    <div class="sp">正在加载...</div>
+  </div>
+
+  <div id="authCard" class="auth-card" style="display:none;">
+    <div class="auth-logo">
+      <span class="logo">🐢</span>
+      <h1>海龟汤创作工坊</h1>
+      <p>AI 横向思维谜题自动生成器</p>
+    </div>
+
+    <!-- 提示信息 -->
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-success" id="authSuccess"></div>
+
+    <!-- 登录表单 -->
+    <div id="loginForm">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin">登录</button>
+        <button class="auth-tab" id="tabRegister">注册</button>
+      </div>
+      <div class="auth-field">
+        <label>邮箱地址</label>
+        <input type="email" id="authEmail" placeholder="your@email.com">
+      </div>
+      <div class="auth-field">
+        <label>密码</label>
+        <input type="password" id="authPassword" placeholder="••••••••">
+      </div>
+      <button class="btn-auth" id="btnEmailAuth" onclick="handleEmailAuth()">登 录</button>
+      <div class="auth-divider">或</div>
+      <button class="btn-google" onclick="handleGoogleAuth()">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        使用 Google 登录
+      </button>
+      <div class="auth-switch" id="authSwitch">没有账号？<a onclick="switchToRegister()">立即注册</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 主内容（登录后显示） ===== -->
+<div class="main-content" id="mainContent">
 
 <!-- Toast容器 -->
 <div class="toast-container" id="toastContainer"></div>
@@ -529,6 +665,9 @@
     <span id="statusText">未配置 API</span>
     <button class="btn btn-secondary btn-sm" onclick="openModal()" style="margin-left: 8px;">
       ⚙️ API 配置
+    </button>
+    <button class="btn btn-danger btn-sm" onclick="logout()" style="margin-left: 6px;" title="退出登录">
+      🚪 退出
     </button>
   </div>
 </nav>
@@ -1415,5 +1554,157 @@ document.getElementById('apiModal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 </script>
+
+<!-- ===== Supabase Auth ===== -->
+<script>
+// ⚠️ 替换为你自己的 Supabase 凭据
+const SUPABASE_URL = 'https://askdqhqhvkklzmgcqtuy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_afquHeJWh5_4emAtev4pDg_5cXWSDk1';
+
+const { createClient } = window.Supabase;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let isRegisterMode = false;
+
+// ===== 初始化 =====
+async function initAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  showMainUI(session);
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    showMainUI(session);
+  });
+}
+
+function showMainUI(session) {
+  const authScreen = document.getElementById('authScreen');
+  const authLoading = document.getElementById('authLoading');
+  const authCard = document.getElementById('authCard');
+  const mainContent = document.getElementById('mainContent');
+
+  if (!session) {
+    authScreen.style.display = 'flex';
+    authLoading.style.display = 'none';
+    authCard.style.display = 'block';
+    mainContent.classList.remove('show');
+    return;
+  }
+
+  authLoading.style.display = 'none';
+  authCard.style.display = 'block';
+  mainContent.classList.add('show');
+
+  // 更新导航栏用户信息
+  updateUserBadge(session.user);
+}
+
+function updateUserBadge(user) {
+  let badge = document.getElementById('userBadge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = 'userBadge';
+    badge.className = 'user-badge';
+    document.querySelector('.status-area').prepend(badge);
+  }
+  const name = user.user_metadata?.full_name || user.email?.split('@')[0] || '用户';
+  const initial = name.charAt(0).toUpperCase();
+  badge.innerHTML = `<div class="user-avatar">${initial}</div>${name}`;
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('authSuccess').style.display = 'none';
+  setTimeout(() => el.style.display = 'none', 5000);
+}
+
+function showAuthSuccess(msg) {
+  const el = document.getElementById('authSuccess');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('authError').style.display = 'none';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+async function handleEmailAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const btn = document.getElementById('btnEmailAuth');
+
+  if (!email || !password) { showAuthError('请填写邮箱和密码'); return; }
+
+  btn.disabled = true;
+  btn.textContent = isRegisterMode ? '正在注册...' : '正在登录...';
+
+  try {
+    if (isRegisterMode) {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+      showAuthSuccess('✅ 注册成功！请查看邮箱验证链接（如果没收到，请检查垃圾箱）');
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    }
+  } catch (e) {
+    showAuthError('❌ ' + (e.message || '操作失败'));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = isRegisterMode ? '注 册' : '登 录';
+  }
+}
+
+async function handleGoogleAuth() {
+  const btn = document.querySelector('.btn-google');
+  btn.disabled = true;
+  btn.textContent = '跳转中...';
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.href }
+  });
+  if (error) { showAuthError('❌ ' + error.message); btn.disabled = false; btn.textContent = '使用 Google 登录'; }
+}
+
+function switchToRegister() {
+  isRegisterMode = true;
+  document.getElementById('tabLogin').classList.remove('active');
+  document.getElementById('tabRegister').classList.add('active');
+  document.getElementById('btnEmailAuth').textContent = '注 册';
+  document.getElementById('authSwitch').innerHTML = '已有账号？<a onclick="switchToLogin()">立即登录</a>';
+  document.getElementById('authError').style.display = 'none';
+  document.getElementById('authSuccess').style.display = 'none';
+}
+
+function switchToLogin() {
+  isRegisterMode = false;
+  document.getElementById('tabRegister').classList.remove('active');
+  document.getElementById('tabLogin').classList.add('active');
+  document.getElementById('btnEmailAuth').textContent = '登 录';
+  document.getElementById('authSwitch').innerHTML = '没有账号？<a onclick="switchToRegister()">立即注册</a>';
+  document.getElementById('authError').style.display = 'none';
+  document.getElementById('authSuccess').style.display = 'none';
+}
+
+// Tab 切换
+document.getElementById('tabLogin').addEventListener('click', switchToLogin);
+document.getElementById('tabRegister').addEventListener('click', switchToRegister);
+
+// 回车登录
+document.getElementById('authPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleEmailAuth();
+});
+document.getElementById('authEmail').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleEmailAuth();
+});
+
+// 退出登录
+function logout() {
+  supabase.auth.signOut();
+}
+
+// 启动
+initAuth();
+</script>
+</body>
 </body>
 </html>
