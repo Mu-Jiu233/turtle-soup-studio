@@ -4,7 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🐢 海龟汤创作工坊</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Supabase 异步加载，避免阻塞页面 -->
+<script>
+(function() {
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  script.onload = function() { window.supabaseReady = true; };
+  script.onerror = function() { window.supabaseReady = false; };
+  document.head.appendChild(script);
+})();
+</script>
 <style>
   :root {
     --bg: #0f1117;
@@ -1561,15 +1570,48 @@ document.getElementById('apiModal').addEventListener('click', function(e) {
 const SUPABASE_URL = 'https://askdqhqhvkklzmgcqtuy.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_afquHeJWh5_4emAtev4pDg_5cXWSDk1';
 
-const { createClient } = window.Supabase;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabase = null;
+try {
+  if (typeof window.Supabase !== 'undefined') {
+    const { createClient } = window.Supabase;
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+} catch (e) {
+  console.warn('Supabase 客户端创建失败:', e.message);
+}
 
 let isRegisterMode = false;
 
 // ===== 初始化 =====
 async function initAuth() {
-  const { data: { session } } = await supabase.auth.getSession();
-  showMainUI(session);
+  // 强制 5 秒后必定显示登录界面，防止卡死
+  const forceShow = setTimeout(() => {
+    const loading = document.getElementById('authLoading');
+    const card = document.getElementById('authCard');
+    if (loading) loading.style.display = 'none';
+    if (card) card.style.display = 'block';
+  }, 5000);
+
+  // 检查 Supabase 是否加载成功
+  if (typeof supabase === 'undefined') {
+    console.warn('Supabase 未加载，显示登录界面');
+    clearTimeout(forceShow);
+    const loading = document.getElementById('authLoading');
+    const card = document.getElementById('authCard');
+    if (loading) loading.style.display = 'none';
+    if (card) card.style.display = 'block';
+    return;
+  }
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    clearTimeout(forceShow);
+    showMainUI(session);
+  } catch (e) {
+    console.warn('认证获取失败:', e.message);
+    clearTimeout(forceShow);
+    showMainUI(null);
+  }
 
   supabase.auth.onAuthStateChange((event, session) => {
     showMainUI(session);
@@ -1582,16 +1624,16 @@ function showMainUI(session) {
   const authCard = document.getElementById('authCard');
   const mainContent = document.getElementById('mainContent');
 
+  // 确保登录界面可见
+  authLoading.style.display = 'none';
+  authCard.style.display = 'block';
+  authScreen.style.display = 'flex';
+
   if (!session) {
-    authScreen.style.display = 'flex';
-    authLoading.style.display = 'none';
-    authCard.style.display = 'block';
     mainContent.classList.remove('show');
     return;
   }
 
-  authLoading.style.display = 'none';
-  authCard.style.display = 'block';
   mainContent.classList.add('show');
 
   // 更新导航栏用户信息
@@ -1628,6 +1670,7 @@ function showAuthSuccess(msg) {
 }
 
 async function handleEmailAuth() {
+  if (!supabase) { showAuthError('❌ 认证服务未加载，请刷新页面或检查网络'); return; }
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   const btn = document.getElementById('btnEmailAuth');
@@ -1655,6 +1698,7 @@ async function handleEmailAuth() {
 }
 
 async function handleGoogleAuth() {
+  if (!supabase) { showAuthError('❌ 认证服务未加载，请刷新页面或检查网络'); return; }
   const btn = document.querySelector('.btn-google');
   btn.disabled = true;
   btn.textContent = '跳转中...';
@@ -1699,12 +1743,14 @@ document.getElementById('authEmail').addEventListener('keydown', e => {
 
 // 退出登录
 function logout() {
+  if (!supabase) { showAuthError('❌ 认证服务未加载'); return; }
   supabase.auth.signOut();
 }
 
 // 启动
 initAuth();
 </script>
-</body>
+
 </body>
 </html>
+
