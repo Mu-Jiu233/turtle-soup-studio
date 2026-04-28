@@ -587,8 +587,33 @@
         <div>② <strong>API Key</strong>：到对应平台控制台获取，填入后不会上传到任何第三方</div>
         <div>③ <strong>测试通过后</strong> 保存，即可在创作页直接使用</div>
       </div>
-      <label style="margin-bottom: 10px; display: block;">快速选择预设</label>
+      <label style="margin-bottom: 10px; display: block;">快速选择预设（⭐推荐免费平台）</label>
       <div class="preset-grid">
+        <div class="preset-card" data-preset="zhipu" onclick="selectPreset(this, 'zhipu')" style="border-color: var(--green);">
+          <div class="p-icon">🧠</div>
+          <div class="p-name">智谱AI ⭐</div>
+          <div style="font-size:10px;color:var(--green);">永久免费</div>
+        </div>
+        <div class="preset-card" data-preset="siliconflow" onclick="selectPreset(this, 'siliconflow')" style="border-color: var(--cyan);">
+          <div class="p-icon">⚡</div>
+          <div class="p-name">硅基流动 ⭐</div>
+          <div style="font-size:10px;color:var(--cyan);">1000RPM免费</div>
+        </div>
+        <div class="preset-card" data-preset="gemini" onclick="selectPreset(this, 'gemini')" style="border-color: #4285f4;">
+          <div class="p-icon">🔵</div>
+          <div class="p-name">Google ⭐</div>
+          <div style="font-size:10px;color:#4285f4;">1440次/天</div>
+        </div>
+        <div class="preset-card" data-preset="openrouter" onclick="selectPreset(this, 'openrouter')" style="border-color: #a855f7;">
+          <div class="p-icon">🌐</div>
+          <div class="p-name">OpenRouter</div>
+          <div style="font-size:10px;color:#a855f7;">50次/天免费</div>
+        </div>
+        <div class="preset-card" data-preset="github-models" onclick="selectPreset(this, 'github-models')" style="border-color: #6e5494;">
+          <div class="p-icon">🐙</div>
+          <div class="p-name">GitHub</div>
+          <div style="font-size:10px;color:#6e5494;">无需魔法</div>
+        </div>
         <div class="preset-card" data-preset="openai" onclick="selectPreset(this, 'openai')">
           <div class="p-icon">🤖</div>
           <div class="p-name">OpenAI</div>
@@ -604,10 +629,6 @@
         <div class="preset-card" data-preset="qwen" onclick="selectPreset(this, 'qwen')">
           <div class="p-icon">🌟</div>
           <div class="p-name">通义千问</div>
-        </div>
-        <div class="preset-card" data-preset="zhipu" onclick="selectPreset(this, 'zhipu')">
-          <div class="p-icon">🧠</div>
-          <div class="p-name">智谱GLM</div>
         </div>
         <div class="preset-card" data-preset="custom" onclick="selectPreset(this, 'custom')">
           <div class="p-icon">🔧</div>
@@ -1086,11 +1107,17 @@ function toggleTag(el) {
 
 // ===== API 弹窗 =====
 const presets = {
+  // ⭐ 免费平台
+  zhipu: { url: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' }, // 永久免费，国内可用
+  siliconflow: { url: 'https://api.siliconflow.cn/v1', model: 'deepseek-ai/DeepSeek-V3-0628' }, // 1000RPM免费，国内可用
+  gemini: { url: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.0-flash' }, // 1440次/天，需魔法
+  openrouter: { url: 'https://openrouter.ai/api/v1', model: 'deepseek/deepseek-chat-v3-0324' }, // 50次/天，需魔法
+  'github-models': { url: 'https://models.github.ai/inference', model: 'openai/gpt-4.1-mini' }, // 15RPM，无需魔法
+  // 付费平台
   openai: { url: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
   azure: { url: 'https://YOUR_RESOURCE.openai.azure.com/openai/deployments/YOUR_DEPLOYMENT', model: 'gpt-4' },
   deepseek: { url: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
   qwen: { url: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-turbo' },
-  zhipu: { url: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' },
   custom: { url: '', model: '' }
 };
 
