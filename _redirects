@@ -1,3 +1,19 @@
-# NVIDIA NIM API 代理转发
-# 需要转发 Authorization header 给英伟达验证
+# API 代理转发 - 解决 CORS 问题
+
+# 智谱AI
+/api/zhipu/*  https://open.bigmodel.cn/api/paas/v4/:splat  200
+
+# OpenAI
+/api/openai/*  https://api.openai.com/v1/:splat  200
+
+# DeepSeek
+/api/deepseek/*  https://api.deepseek.com/v1/:splat  200
+
+# 通义千问
+/api/qwen/*  https://dashscope.aliyuncs.com/compatible-mode/v1/:splat  200
+
+# Azure OpenAI（需要配置自己的端点）
+/api/azure/*  https://YOUR_RESOURCE.openai.azure.com/openai/deployments/YOUR_DEPLOYMENT/:splat  200
+
+# NVIDIA NIM API
 /api/nvidia/*  https://integrate.api.nvidia.com/v1/:splat  200
