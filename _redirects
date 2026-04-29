@@ -1,2 +1,3 @@
 # NVIDIA NIM API 代理转发
+# 需要转发 Authorization header 给英伟达验证
 /api/nvidia/*  https://integrate.api.nvidia.com/v1/:splat  200
