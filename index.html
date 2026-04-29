@@ -1143,7 +1143,7 @@ const presets = {
   // ⭐ 免费平台
   zhipu: { url: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' }, // 永久免费，国内可用
   siliconflow: { url: 'https://api.siliconflow.cn/v1', model: 'deepseek-ai/DeepSeek-V3-0628' }, // 1000RPM免费，国内可用
-  nvidia: { url: 'https://integrate.api.nvidia.com/v1', model: 'deepseek-ai/deepseek-v3.2', key: 'bnZhcGktYWlVemtuNlBUd2hfUVNUMXY5ZjVjOFo3RW93MzdXbFZ2MWd1bmhMUU1tQkFqelBNU0dTNzdIc1d0UllVVVBob1Q=' }, // 40RPM，无需魔法
+  nvidia: { url: 'https://integrate.api.nvidia.com/v1', model: 'deepseek-ai/deepseek-v3.2' }, // 40RPM，无需魔法
   gemini: { url: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.0-flash' }, // 1440次/天，需魔法
   openrouter: { url: 'https://openrouter.ai/api/v1', model: 'deepseek/deepseek-chat-v3-0324' }, // 50次/天，需魔法
   'github-models': { url: 'https://models.github.ai/inference', model: 'openai/gpt-4.1-mini' }, // 15RPM，无需魔法
@@ -1177,7 +1177,6 @@ function selectPreset(el, name) {
   const p = presets[name];
   if (p.url) document.getElementById('apiUrl').value = p.url;
   if (p.model) document.getElementById('modelName').value = p.model;
-  if (p.key) document.getElementById('apiKey').value = atob(p.key);
 }
 
 function toggleKey() {
