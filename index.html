@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🐢 海龟汤创作工坊</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
   :root {
     --bg: #0f1117;
@@ -348,6 +348,21 @@
   .preset-card .p-icon { font-size: 22px; margin-bottom: 4px; }
   .preset-card .p-name { font-size: 12px; font-weight: 600; }
 
+  /* 英伟达模型下拉 */
+  #nvidiaModelSelect { margin-bottom: 16px; }
+  #nvidiaModelSelect select {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 9px 12px;
+    font-size: 13px;
+    width: 100%;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  #nvidiaModelSelect select option { background: var(--surface2); }
+
   /* 测试结果 */
   .test-result {
     display: none; padding: 10px 12px; border-radius: var(--radius-sm);
@@ -417,6 +432,95 @@
     .layout { grid-template-columns: 1fr; }
     .preset-grid { grid-template-columns: repeat(2, 1fr); }
     .level-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* ===== 手机端适配 ===== */
+  @media (max-width: 640px) {
+    /* 导航栏：折叠为两行 */
+    .navbar {
+      height: auto;
+      flex-wrap: wrap;
+      padding: 10px 14px;
+      gap: 8px;
+    }
+    .navbar-brand { font-size: 15px; }
+    .navbar-brand span { font-size: 20px; }
+    .nav-tabs {
+      order: 3;
+      width: 100%;
+      justify-content: center;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+    }
+    .nav-tab { padding: 5px 12px; font-size: 13px; }
+    .status-area { font-size: 12px; }
+    #statusText { display: none; }
+
+    /* 主内容区 */
+    .main { padding: 12px; }
+    .layout { gap: 12px; }
+    .panel-body { padding: 12px; }
+    .panel-header { padding: 10px 14px; font-size: 13px; }
+
+    /* 输出区域 */
+    .output-area { min-height: 280px; padding: 14px; font-size: 14px; }
+    .output-placeholder { height: 220px; }
+    .output-placeholder .big-icon { font-size: 48px; }
+
+    /* 生成按钮行 */
+    .gen-btn-row { flex-wrap: wrap; }
+    .gen-btn { font-size: 15px; padding: 12px; }
+
+    /* 预设卡片 */
+    .preset-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .preset-card { padding: 8px 6px; }
+    .preset-card .p-icon { font-size: 18px; }
+    .preset-card .p-name { font-size: 11px; }
+
+    /* 难度卡片 */
+    .level-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .level-card { padding: 8px 4px; }
+    .level-card .name { font-size: 12px; }
+    .level-card .desc { font-size: 9px; }
+
+    /* Tag 主题标签 */
+    .tag { padding: 4px 8px; font-size: 11px; }
+
+    /* 按钮 */
+    .btn { padding: 8px 14px; font-size: 13px; }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+    /* 英伟达模型下拉手机适配 */
+    #nvidiaModelSelect select { font-size: 12px; padding: 8px; }
+
+    /* 弹窗全屏化 */
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal {
+      width: 100%;
+      max-width: 100%;
+      max-height: 92vh;
+      border-radius: 20px 20px 0 0;
+    }
+    .modal-header { padding: 16px 18px; }
+    .modal-body { padding: 16px 18px; }
+    .modal-footer { padding: 12px 18px; }
+
+    /* 输出工具栏 */
+    .output-toolbar { gap: 6px; padding: 8px 10px; }
+    .output-toolbar .spacer { display: none; }
+
+    /* 历史记录 */
+    .history-item { padding: 10px 12px; }
+
+    /* Toast */
+    .toast-container { top: auto; bottom: 20px; right: 10px; left: 10px; }
+    .toast { max-width: 100%; }
+
+    /* 汤面汤底排版 */
+    .soup-output h2 { font-size: 15px; }
+    .soup-output .soup-text,
+    .soup-output .answer-text,
+    .soup-output .note-text { padding: 10px 12px; font-size: 14px; }
   }
 
   /* ===== Auth 登录界面 ===== */
@@ -507,55 +611,13 @@
   }
   .main-content { display: none; }
   .main-content.show { display: block; }
+
 </style>
 </head>
 <body>
 
-<!-- ===== Auth 登录界面 ===== -->
-<div id="authScreen">
-  <div id="authLoading" class="auth-loading">
-    <div class="big">🐢</div>
-    <div class="sp">正在加载...</div>
-  </div>
-
-  <div id="authCard" class="auth-card" style="display:none;">
-    <div class="auth-logo">
-      <span class="logo">🐢</span>
-      <h1>海龟汤创作工坊</h1>
-      <p>AI 横向思维谜题自动生成器</p>
-    </div>
-
-    <!-- 提示信息 -->
-    <div class="auth-error" id="authError"></div>
-    <div class="auth-success" id="authSuccess"></div>
-
-    <!-- 登录表单 -->
-    <div id="loginForm">
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tabLogin">登录</button>
-        <button class="auth-tab" id="tabRegister">注册</button>
-      </div>
-      <div class="auth-field">
-        <label>邮箱地址</label>
-        <input type="email" id="authEmail" placeholder="your@email.com">
-      </div>
-      <div class="auth-field">
-        <label>密码</label>
-        <input type="password" id="authPassword" placeholder="••••••••">
-      </div>
-      <button class="btn-auth" id="btnEmailAuth" onclick="handleEmailAuth()">登 录</button>
-      <div class="auth-divider">或</div>
-      <button class="btn-google" onclick="handleGoogleAuth()">
-        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        使用 Google 登录
-      </button>
-      <div class="auth-switch" id="authSwitch">没有账号？<a onclick="switchToRegister()">立即注册</a></div>
-    </div>
-  </div>
-</div>
-
-<!-- ===== 主内容（登录后显示） ===== -->
-<div class="main-content" id="mainContent">
+<!-- ===== 主内容 ===== -->
+<div class="main" id="mainContent">
 
 <!-- Toast容器 -->
 <div class="toast-container" id="toastContainer"></div>
@@ -574,8 +636,38 @@
         <div>② <strong>API Key</strong>：到对应平台控制台获取，填入后不会上传到任何第三方</div>
         <div>③ <strong>测试通过后</strong> 保存，即可在创作页直接使用</div>
       </div>
-      <label style="margin-bottom: 10px; display: block;">快速选择预设</label>
+      <label style="margin-bottom: 10px; display: block;">快速选择预设（⭐推荐免费平台）</label>
       <div class="preset-grid">
+        <div class="preset-card" data-preset="zhipu" onclick="selectPreset(this, 'zhipu')" style="border-color: var(--green);">
+          <div class="p-icon">🧠</div>
+          <div class="p-name">智谱AI ⭐</div>
+          <div style="font-size:10px;color:var(--green);">永久免费</div>
+        </div>
+        <div class="preset-card" data-preset="siliconflow" onclick="selectPreset(this, 'siliconflow')" style="border-color: var(--cyan);">
+          <div class="p-icon">⚡</div>
+          <div class="p-name">硅基流动 ⭐</div>
+          <div style="font-size:10px;color:var(--cyan);">1000RPM免费</div>
+        </div>
+        <div class="preset-card" data-preset="nvidia" onclick="selectPreset(this, 'nvidia')" style="border-color: #76b900;">
+          <div class="p-icon">🎮</div>
+          <div class="p-name">英伟达NIM ⭐</div>
+          <div style="font-size:10px;color:#76b900;">40RPM免费</div>
+        </div>
+        <div class="preset-card" data-preset="gemini" onclick="selectPreset(this, 'gemini')" style="border-color: #4285f4;">
+          <div class="p-icon">🔵</div>
+          <div class="p-name">Google ⭐</div>
+          <div style="font-size:10px;color:#4285f4;">1440次/天</div>
+        </div>
+        <div class="preset-card" data-preset="openrouter" onclick="selectPreset(this, 'openrouter')" style="border-color: #a855f7;">
+          <div class="p-icon">🌐</div>
+          <div class="p-name">OpenRouter</div>
+          <div style="font-size:10px;color:#a855f7;">50次/天免费</div>
+        </div>
+        <div class="preset-card" data-preset="github-models" onclick="selectPreset(this, 'github-models')" style="border-color: #6e5494;">
+          <div class="p-icon">🐙</div>
+          <div class="p-name">GitHub</div>
+          <div style="font-size:10px;color:#6e5494;">无需魔法</div>
+        </div>
         <div class="preset-card" data-preset="openai" onclick="selectPreset(this, 'openai')">
           <div class="p-icon">🤖</div>
           <div class="p-name">OpenAI</div>
@@ -591,10 +683,6 @@
         <div class="preset-card" data-preset="qwen" onclick="selectPreset(this, 'qwen')">
           <div class="p-icon">🌟</div>
           <div class="p-name">通义千问</div>
-        </div>
-        <div class="preset-card" data-preset="zhipu" onclick="selectPreset(this, 'zhipu')">
-          <div class="p-icon">🧠</div>
-          <div class="p-name">智谱GLM</div>
         </div>
         <div class="preset-card" data-preset="custom" onclick="selectPreset(this, 'custom')">
           <div class="p-icon">🔧</div>
@@ -621,6 +709,17 @@
         <label>模型名称</label>
         <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">在平台上部署的模型标识符，如 <code style="background:var(--surface3);padding:1px 5px;border-radius:3px;">gpt-4o-mini</code>、<code style="background:var(--surface3);padding:1px 5px;border-radius:3px;">deepseek-chat</code></div>
         <input type="text" id="modelName" placeholder="gpt-4o-mini">
+      </div>
+      <!-- 英伟达模型选择器 -->
+      <div class="field" id="nvidiaModelSelect" style="display:none;">
+        <label>选择英伟达免费模型</label>
+        <select id="nvidiaModelDropdown" onchange="onNvidiaModelChange(this)">
+          <option value="deepseek-ai/deepseek-v3.2">🌐 DeepSeek-v3.2（代码/逻辑推理首选）</option>
+          <option value="moonshotai/kimi-k2.5">📄 Kimi-k2.5（超长文本解析首选）</option>
+          <option value="stepfun-ai/step-3.5-flash">⚡ Step-3.5-Flash（极速低延迟首选）</option>
+          <option value="z-ai/glm4.7">💬 GLM-4.7（中文拟人化交互首选）</option>
+          <option value="minimaxai/minimax-m2.1">🎭 Minimax-m2.1（社交聊天/语音后端）</option>
+        </select>
       </div>
       <div class="field">
         <label>最大 Token 数</label>
@@ -665,9 +764,6 @@
     <span id="statusText">未配置 API</span>
     <button class="btn btn-secondary btn-sm" onclick="openModal()" style="margin-left: 8px;">
       ⚙️ API 配置
-    </button>
-    <button class="btn btn-danger btn-sm" onclick="logout()" style="margin-left: 6px;" title="退出登录">
-      🚪 退出
     </button>
   </div>
 </nav>
@@ -1073,11 +1169,28 @@ function toggleTag(el) {
 
 // ===== API 弹窗 =====
 const presets = {
+  // ⭐ 免费平台
+  zhipu: { url: '/api/zhipu', model: 'glm-4-flash' }, // 永久免费，国内可用
+  siliconflow: { url: '/api/siliconflow', model: 'deepseek-ai/DeepSeek-V3-0628' }, // 1000RPM免费，国内可用
+  nvidia: {
+    url: '/api/nvidia',
+    model: 'deepseek-ai/deepseek-v3.2',
+    models: [
+      { id: 'deepseek-ai/deepseek-v3.2', name: 'DeepSeek-v3.2', icon: '🌐', desc: '代码/逻辑推理首选' },
+      { id: 'moonshotai/kimi-k2.5', name: 'Kimi-k2.5', icon: '📄', desc: '超长文本解析首选' },
+      { id: 'stepfun-ai/step-3.5-flash', name: 'Step-3.5-Flash', icon: '⚡', desc: '极速低延迟首选' },
+      { id: 'z-ai/glm4.7', name: 'GLM-4.7', icon: '💬', desc: '中文拟人化交互首选' },
+      { id: 'minimaxai/minimax-m2.1', name: 'Minimax-m2.1', icon: '🎭', desc: '社交聊天/语音后端' }
+    ]
+  }, // 40RPM，无需魔法
+  gemini: { url: '/api/gemini', model: 'gemini-2.0-flash' }, // 1440次/天，需魔法
+  openrouter: { url: '/api/openrouter', model: 'deepseek/deepseek-chat-v3-0324' }, // 50次/天，需魔法
+  'github-models': { url: '/api/github-models', model: 'openai/gpt-4.1-mini' }, // 15RPM，无需魔法
+  // 付费平台
   openai: { url: '/api/openai', model: 'gpt-4o-mini' },
   azure: { url: '/api/azure', model: 'gpt-4' },
   deepseek: { url: '/api/deepseek', model: 'deepseek-chat' },
   qwen: { url: '/api/qwen', model: 'qwen-turbo' },
-  zhipu: { url: '/api/zhipu', model: 'glm-4-flash' },
   custom: { url: '', model: '' }
 };
 
@@ -1103,6 +1216,27 @@ function selectPreset(el, name) {
   const p = presets[name];
   if (p.url) document.getElementById('apiUrl').value = p.url;
   if (p.model) document.getElementById('modelName').value = p.model;
+
+  // 英伟达预设：显示模型选择器，隐藏手动输入
+  const nvidiaSelect = document.getElementById('nvidiaModelSelect');
+  const modelInput = document.getElementById('modelName');
+  if (name === 'nvidia') {
+    nvidiaSelect.style.display = 'block';
+    modelInput.placeholder = '从上方选择模型';
+    if (presets.nvidia.models) {
+      const dropdown = document.getElementById('nvidiaModelDropdown');
+      dropdown.innerHTML = presets.nvidia.models.map(m =>
+        `<option value="${m.id}">${m.icon} ${m.name}（${m.desc}）</option>`
+      ).join('');
+    }
+  } else {
+    nvidiaSelect.style.display = 'none';
+    modelInput.placeholder = 'gpt-4o-mini';
+  }
+}
+
+function onNvidiaModelChange(el) {
+  document.getElementById('modelName').value = el.value;
 }
 
 function toggleKey() {
@@ -1555,167 +1689,6 @@ document.getElementById('apiModal').addEventListener('click', function(e) {
 });
 </script>
 
-<!-- ===== Supabase Auth ===== -->
-<script>
-// ⚠️ 替换为你自己的 Supabase 凭据
-const SUPABASE_URL = 'https://askdqhqhvkklzmgcqtuy.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_afquHeJWh5_4emAtev4pDg_5cXWSDk1';
-
-const { createClient } = window.Supabase;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-let isRegisterMode = false;
-
-// ===== 初始化 =====
-async function initAuth() {
-  try {
-    // 设置超时保护，防止 Supabase 连接失败导致页面卡死
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('连接超时')), 8000)
-    );
-    
-    const sessionPromise = supabase.auth.getSession();
-    const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
-    showMainUI(session);
-  } catch (e) {
-    console.warn('认证初始化:', e.message);
-    // 即使 Supabase 连接失败，也显示登录界面
-    showMainUI(null);
-  }
-
-  supabase.auth.onAuthStateChange((event, session) => {
-    showMainUI(session);
-  });
-}
-
-function showMainUI(session) {
-  const authScreen = document.getElementById('authScreen');
-  const authLoading = document.getElementById('authLoading');
-  const authCard = document.getElementById('authCard');
-  const mainContent = document.getElementById('mainContent');
-
-  // 确保登录界面可见
-  authLoading.style.display = 'none';
-  authCard.style.display = 'block';
-  authScreen.style.display = 'flex';
-
-  if (!session) {
-    mainContent.classList.remove('show');
-    return;
-  }
-
-  mainContent.classList.add('show');
-
-  // 更新导航栏用户信息
-  updateUserBadge(session.user);
-}
-
-function updateUserBadge(user) {
-  let badge = document.getElementById('userBadge');
-  if (!badge) {
-    badge = document.createElement('div');
-    badge.id = 'userBadge';
-    badge.className = 'user-badge';
-    document.querySelector('.status-area').prepend(badge);
-  }
-  const name = user.user_metadata?.full_name || user.email?.split('@')[0] || '用户';
-  const initial = name.charAt(0).toUpperCase();
-  badge.innerHTML = `<div class="user-avatar">${initial}</div>${name}`;
-}
-
-function showAuthError(msg) {
-  const el = document.getElementById('authError');
-  el.textContent = msg;
-  el.style.display = 'block';
-  document.getElementById('authSuccess').style.display = 'none';
-  setTimeout(() => el.style.display = 'none', 5000);
-}
-
-function showAuthSuccess(msg) {
-  const el = document.getElementById('authSuccess');
-  el.textContent = msg;
-  el.style.display = 'block';
-  document.getElementById('authError').style.display = 'none';
-  setTimeout(() => el.style.display = 'none', 4000);
-}
-
-async function handleEmailAuth() {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
-  const btn = document.getElementById('btnEmailAuth');
-
-  if (!email || !password) { showAuthError('请填写邮箱和密码'); return; }
-
-  btn.disabled = true;
-  btn.textContent = isRegisterMode ? '正在注册...' : '正在登录...';
-
-  try {
-    if (isRegisterMode) {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-      showAuthSuccess('✅ 注册成功！请查看邮箱验证链接（如果没收到，请检查垃圾箱）');
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-    }
-  } catch (e) {
-    showAuthError('❌ ' + (e.message || '操作失败'));
-  } finally {
-    btn.disabled = false;
-    btn.textContent = isRegisterMode ? '注 册' : '登 录';
-  }
-}
-
-async function handleGoogleAuth() {
-  const btn = document.querySelector('.btn-google');
-  btn.disabled = true;
-  btn.textContent = '跳转中...';
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.href }
-  });
-  if (error) { showAuthError('❌ ' + error.message); btn.disabled = false; btn.textContent = '使用 Google 登录'; }
-}
-
-function switchToRegister() {
-  isRegisterMode = true;
-  document.getElementById('tabLogin').classList.remove('active');
-  document.getElementById('tabRegister').classList.add('active');
-  document.getElementById('btnEmailAuth').textContent = '注 册';
-  document.getElementById('authSwitch').innerHTML = '已有账号？<a onclick="switchToLogin()">立即登录</a>';
-  document.getElementById('authError').style.display = 'none';
-  document.getElementById('authSuccess').style.display = 'none';
-}
-
-function switchToLogin() {
-  isRegisterMode = false;
-  document.getElementById('tabRegister').classList.remove('active');
-  document.getElementById('tabLogin').classList.add('active');
-  document.getElementById('btnEmailAuth').textContent = '登 录';
-  document.getElementById('authSwitch').innerHTML = '没有账号？<a onclick="switchToRegister()">立即注册</a>';
-  document.getElementById('authError').style.display = 'none';
-  document.getElementById('authSuccess').style.display = 'none';
-}
-
-// Tab 切换
-document.getElementById('tabLogin').addEventListener('click', switchToLogin);
-document.getElementById('tabRegister').addEventListener('click', switchToRegister);
-
-// 回车登录
-document.getElementById('authPassword').addEventListener('keydown', e => {
-  if (e.key === 'Enter') handleEmailAuth();
-});
-document.getElementById('authEmail').addEventListener('keydown', e => {
-  if (e.key === 'Enter') handleEmailAuth();
-});
-
-// 退出登录
-function logout() {
-  supabase.auth.signOut();
-}
-
-// 启动
-initAuth();
 </script>
 
 </body>

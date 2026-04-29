@@ -3,6 +3,21 @@
 # 智谱AI
 /api/zhipu/*  https://open.bigmodel.cn/api/paas/v4/:splat  200
 
+# 硅基流动
+/api/siliconflow/*  https://api.siliconflow.cn/v1/:splat  200
+
+# NVIDIA NIM API
+/api/nvidia/*  https://integrate.api.nvidia.com/v1/:splat  200
+
+# Gemini
+/api/gemini/*  https://generativelanguage.googleapis.com/v1beta/openai/:splat  200
+
+# OpenRouter
+/api/openrouter/*  https://openrouter.ai/api/v1/:splat  200
+
+# GitHub Models
+/api/github-models/*  https://models.github.ai/inference/:splat  200
+
 # OpenAI
 /api/openai/*  https://api.openai.com/v1/:splat  200
 
@@ -12,8 +27,5 @@
 # 通义千问
 /api/qwen/*  https://dashscope.aliyuncs.com/compatible-mode/v1/:splat  200
 
-# Azure OpenAI（需要配置自己的端点）
+# Azure OpenAI
 /api/azure/*  https://YOUR_RESOURCE.openai.azure.com/openai/deployments/YOUR_DEPLOYMENT/:splat  200
-
-# NVIDIA NIM API
-/api/nvidia/*  https://integrate.api.nvidia.com/v1/:splat  200
