@@ -419,6 +419,92 @@
     .level-grid { grid-template-columns: repeat(3, 1fr); }
   }
 
+  /* ===== 手机端适配 ===== */
+  @media (max-width: 640px) {
+    /* 导航栏：折叠为两行 */
+    .navbar {
+      height: auto;
+      flex-wrap: wrap;
+      padding: 10px 14px;
+      gap: 8px;
+    }
+    .navbar-brand { font-size: 15px; }
+    .navbar-brand span { font-size: 20px; }
+    .nav-tabs {
+      order: 3;
+      width: 100%;
+      justify-content: center;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+    }
+    .nav-tab { padding: 5px 12px; font-size: 13px; }
+    .status-area { font-size: 12px; }
+    #statusText { display: none; }
+
+    /* 主内容区 */
+    .main { padding: 12px; }
+    .layout { gap: 12px; }
+    .panel-body { padding: 12px; }
+    .panel-header { padding: 10px 14px; font-size: 13px; }
+
+    /* 输出区域 */
+    .output-area { min-height: 280px; padding: 14px; font-size: 14px; }
+    .output-placeholder { height: 220px; }
+    .output-placeholder .big-icon { font-size: 48px; }
+
+    /* 生成按钮行 */
+    .gen-btn-row { flex-wrap: wrap; }
+    .gen-btn { font-size: 15px; padding: 12px; }
+
+    /* 预设卡片 */
+    .preset-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .preset-card { padding: 8px 6px; }
+    .preset-card .p-icon { font-size: 18px; }
+    .preset-card .p-name { font-size: 11px; }
+
+    /* 难度卡片 */
+    .level-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .level-card { padding: 8px 4px; }
+    .level-card .name { font-size: 12px; }
+    .level-card .desc { font-size: 9px; }
+
+    /* Tag 主题标签 */
+    .tag { padding: 4px 8px; font-size: 11px; }
+
+    /* 按钮 */
+    .btn { padding: 8px 14px; font-size: 13px; }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+    /* 弹窗全屏化 */
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal {
+      width: 100%;
+      max-width: 100%;
+      max-height: 92vh;
+      border-radius: 20px 20px 0 0;
+    }
+    .modal-header { padding: 16px 18px; }
+    .modal-body { padding: 16px 18px; }
+    .modal-footer { padding: 12px 18px; }
+
+    /* 输出工具栏 */
+    .output-toolbar { gap: 6px; padding: 8px 10px; }
+    .output-toolbar .spacer { display: none; }
+
+    /* 历史记录 */
+    .history-item { padding: 10px 12px; }
+
+    /* Toast */
+    .toast-container { top: auto; bottom: 20px; right: 10px; left: 10px; }
+    .toast { max-width: 100%; }
+
+    /* 汤面汤底排版 */
+    .soup-output h2 { font-size: 15px; }
+    .soup-output .soup-text,
+    .soup-output .answer-text,
+    .soup-output .note-text { padding: 10px 12px; font-size: 14px; }
+  }
+
   /* ===== Auth 登录界面 ===== */
   #authScreen {
     position: fixed; inset: 0; z-index: 9999;
