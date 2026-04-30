@@ -668,6 +668,11 @@
       </div>
       <label style="margin-bottom: 10px; display: block;">快速选择预设（⭐推荐免费平台）</label>
       <div class="preset-grid">
+        <div class="preset-card" data-preset="openrelay" onclick="selectPreset(this, 'openrelay')" style="border-color: #ff6b35; background: rgba(255,107,53,0.07);">
+          <div class="p-icon">🔗</div>
+          <div class="p-name">OpenRelay 🔥</div>
+          <div style="font-size:10px;color:#ff6b35;">本地免费无限用</div>
+        </div>
         <div class="preset-card" data-preset="zhipu" onclick="selectPreset(this, 'zhipu')" style="border-color: var(--green);">
           <div class="p-icon">🧠</div>
           <div class="p-name">智谱AI ⭐</div>
@@ -721,6 +726,17 @@
       </div>
 
       <div class="divider"></div>
+
+      <!-- OpenRelay 使用说明（仅在选中 OpenRelay 时显示） -->
+      <div id="openrelayTip" style="display:none;background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.3);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;line-height:1.8;color:var(--text2);">
+        <div style="font-weight:700;color:#ff6b35;margin-bottom:6px;">🔗 OpenRelay — 本地 Token 自由方案</div>
+        <div style="margin-bottom:4px;">使用前需在本地运行 OpenRelay 服务：</div>
+        <div>1️⃣ 前往 <a href="https://github.com/romgX/openrelay/releases" target="_blank" style="color:#ff6b35;">GitHub Releases</a> 下载对应系统的可执行文件</div>
+        <div>2️⃣ 双击运行，浏览器打开 <code style="background:var(--surface3);padding:1px 5px;border-radius:3px;">http://localhost:18765</code></div>
+        <div>3️⃣ 在 OpenRelay 面板中登录你的 Claude/Copilot 等账号</div>
+        <div>4️⃣ 回到这里点击「保存」即可使用</div>
+        <div style="margin-top:6px;color:var(--text3);font-size:11px;">⚠️ 需要保持 OpenRelay 在后台运行；API Key 填 <code style="background:var(--surface3);padding:1px 5px;border-radius:3px;">unused</code> 即可</div>
+      </div>
 
       <div class="field">
         <label>API 端点 (Base URL)</label>
@@ -1211,6 +1227,8 @@ function toggleTag(el) {
 
 // ===== API 弹窗 =====
 const presets = {
+  // 🔥 本地代理
+  openrelay: { url: 'http://localhost:18765', model: 'claude-sonnet-4-5', key: 'unused' }, // 本地运行 OpenRelay，无限用
   // ⭐ 免费平台
   zhipu: { url: '/api/zhipu', model: 'glm-4-flash' }, // 永久免费，国内可用
   siliconflow: { url: '/api/siliconflow', model: 'deepseek-ai/DeepSeek-V3-0628' }, // 1000RPM免费，国内可用
@@ -1258,6 +1276,19 @@ function selectPreset(el, name) {
   const p = presets[name];
   if (p.url) document.getElementById('apiUrl').value = p.url;
   if (p.model) document.getElementById('modelName').value = p.model;
+
+  // OpenRelay：自动填 key=unused，显示使用说明
+  const openrelayTip = document.getElementById('openrelayTip');
+  const apiKeyInput = document.getElementById('apiKey');
+  if (name === 'openrelay') {
+    openrelayTip.style.display = 'block';
+    apiKeyInput.value = 'unused';
+    apiKeyInput.placeholder = 'unused（OpenRelay 不需要真实 key）';
+  } else {
+    openrelayTip.style.display = 'none';
+    if (apiKeyInput.value === 'unused') apiKeyInput.value = '';
+    apiKeyInput.placeholder = 'sk-...';
+  }
 
   // 英伟达预设：显示模型选择器，隐藏手动输入
   const nvidiaSelect = document.getElementById('nvidiaModelSelect');
